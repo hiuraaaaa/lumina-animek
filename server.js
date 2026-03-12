@@ -21,25 +21,20 @@ app.use('/api/anime', require('./api/anime'));
 
 const pub = (file) => path.join(__dirname, 'public', file);
 
-app.get('/',          (req, res) => res.sendFile(pub('index.html')));
-app.get('/search',    (req, res) => res.sendFile(pub('search.html')));
-app.get('/detail',    (req, res) => res.sendFile(pub('detail.html')));
-app.get('/watch',     (req, res) => res.sendFile(pub('watch.html')));
-app.get('/schedule',  (req, res) => res.sendFile(pub('schedule.html')));
+app.get('/',         (req, res) => res.sendFile(pub('index.html')));
+app.get('/search',   (req, res) => res.sendFile(pub('search.html')));
+app.get('/detail',   (req, res) => res.sendFile(pub('detail.html')));
+app.get('/watch',    (req, res) => res.sendFile(pub('watch.html')));
+app.get('/schedule', (req, res) => res.sendFile(pub('schedule.html')));
 
-app.use((req, res) => {
-    res.status(404).json({ status: false, message: 'Not Found' });
-});
-
+app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ status: false, message: 'Internal Server Error' });
 });
 
 if (require.main === module) {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running at http://localhost:${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
 }
 
 module.exports = app;
