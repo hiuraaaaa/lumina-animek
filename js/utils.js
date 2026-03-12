@@ -29,7 +29,7 @@ function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
     const completed = a.status === 'Completed' || a.episode === 'Completed';
-    return `<div class="anime-card" onclick="window.location.href='/detail?slug=${toAnimeSlug(slug)}'">
+    return `<div class="anime-card" onclick="window.location.href='/detail?slug=' + toAnimeSlug(slug)">
         <div class="anime-card-poster">
             <img src="${a.poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
@@ -75,6 +75,12 @@ function toAnimeSlug(slug) {
 function goDetail(anime) {
     if (typeof anime === 'string') {
         window.location.href = '/detail?slug=' + toAnimeSlug(anime);
+        return;
+    }
+    if (anime.oploverz_url) {
+        const epSlug    = anime.oploverz_url.replace(/\/$/, '').split('/').pop() || '';
+        const animeSlug = toAnimeSlug(epSlug);
+        window.location.href = '/detail?slug=' + animeSlug;
         return;
     }
     const slug = anime.slug || extractSlug(anime);
