@@ -31,6 +31,15 @@ router.get('/home', async (req, res) => {
     }
 });
 
+router.get('/schedule', async (req, res) => {
+    try {
+        const data = await apiFetch(`${API_BASE}/schedule`);
+        res.json({ status: true, ...data });
+    } catch (e) {
+        res.status(500).json({ status: false, message: e.message });
+    }
+});
+
 router.get('/search', async (req, res) => {
     try {
         const { q = '', page = 1 } = req.query;
