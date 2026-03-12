@@ -26,18 +26,14 @@ router.get('/home', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const data = await apiFetch(`${API_BASE}/home?page=${page}`);
         res.json({ status: true, ...data });
-    } catch (e) {
-        res.status(500).json({ status: false, message: e.message });
-    }
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
 router.get('/schedule', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/schedule`);
         res.json({ status: true, ...data });
-    } catch (e) {
-        res.status(500).json({ status: false, message: e.message });
-    }
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
 router.get('/search', async (req, res) => {
@@ -46,27 +42,28 @@ router.get('/search', async (req, res) => {
         if (!q.trim()) return res.status(400).json({ status: false, message: 'Query tidak boleh kosong' });
         const data = await apiFetch(`${API_BASE}/search?q=${encodeURIComponent(q)}&page=${page}`);
         res.json({ status: true, ...data });
-    } catch (e) {
-        res.status(500).json({ status: false, message: e.message });
-    }
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+router.get('/anime/:slug', async (req, res) => {
+    try {
+        const data = await apiFetch(`${API_BASE}/anime/${req.params.slug}`);
+        res.json({ status: true, ...data });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
 router.get('/detail/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/detail/${req.params.slug}`);
         res.json({ status: true, ...data });
-    } catch (e) {
-        res.status(500).json({ status: false, message: e.message });
-    }
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
 router.get('/watch/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/watch/${req.params.slug}`);
         res.json({ status: true, ...data });
-    } catch (e) {
-        res.status(500).json({ status: false, message: e.message });
-    }
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
 module.exports = router;
