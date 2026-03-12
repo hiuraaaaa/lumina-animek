@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Detail Anime — AniStream</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* ── HERO ── */
+    .detail-hero {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .hero-bg-blur {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      filter: blur(20px) brightness(0.35);
+      transform: scale(1.1);
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(15,15,15,0.3) 0%, rgba(15,15,15,1) 100%);
+    }
+
+    .hero-topnav {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      z-index: 10;
+    }
+
+    /* ── DETAIL CARD ── */
+    .detail-card {
+      position: relative;
+      margin: -60px 16px 0;
+      display: flex;
+      gap: 14px;
+      z-index: 2;
+    }
+
+    .detail-poster {
+      width: 110px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      aspect-ratio: 2/3;
+    }
+
+    .detail-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-meta {
+      flex: 1;
+      padding-top: 8px;
+      min-width: 0;
+    }
+
+    .detail-title-text {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .status-pill::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .status-pill.ongoing   { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    .status-pill.completed { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .info-item { font-size: 11px; }
+    .info-label { color: var(--text3); margin-bottom: 1px; }
+    .info-value { color: var(--text2); font-weight: 600; }
+
+    /* ── ACTION BUTTONS ── */
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      padding: 16px 16px 0;
+    }
+
+    .btn-watch {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-watch:active { transform: scale(0.97); background: #1d4ed8; }
+
+    .btn-save {
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-save:active { background: var(--bg3); }
+
+    /* ── SECTION ── */
+    .detail-section {
+      padding: 20px 16px 0;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-label::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: var(--accent2);
+      border-radius: 2px;
+    }
+
+    /* ── SYNOPSIS ── */
+    .synopsis-text {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.7;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .synopsis-text.expanded {
+      -webkit-line-clamp: unset;
+    }
+
+    .synopsis-toggle {
+      font-size: 12px;
+      color: var(--accent2);
+      font-weight: 600;
+      margin-top: 6px;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    /* ── GENRES ── */
+    #detail-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .genre-chip {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .genre-chip:active {
+      background: rgba(37,99,235,0.2);
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    /* ── EPISODE LIST ── */
+    .ep-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    #sort-btn {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      background: rgba(37,99,235,0.1);
+      border: 1px solid rgba(37,99,235,0.3);
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    #ep-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ep-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+    .ep-item:active {
+      background: var(--bg3);
+      transform: scale(0.98);
+    }
+
+    .ep-num {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent2);
+      min-width: 44px;
+      flex-shrink: 0;
+    }
+
+    .ep-info { flex: 1; min-width: 0; }
+
+    .ep-title {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ep-date {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .ep-play { color: var(--text3); flex-shrink: 0; }
+
+    #ep-load-more {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      cursor: pointer;
+      margin-top: 8px;
+      display: none;
+      transition: all 0.2s;
+    }
+    #ep-load-more:active { background: var(--bg3); }
+
+    /* ── SKELETON ── */
+    #detail-skeleton { display: none; }
+
+    .sk-hero {
+      height: 200px;
+      background: var(--bg2);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .sk-card {
+      margin: -60px 16px 0;
+      display: flex;
+      gap: 14px;
+    }
+
+    .sk-poster {
+      width: 110px;
+      aspect-ratio: 2/3;
+      background: var(--bg3);
+      border-radius: 10px;
+      flex-shrink: 0;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .sk-meta { flex: 1; padding-top: 8px; }
+
+    .sk-line {
+      height: 14px;
+      background: var(--bg3);
+      border-radius: 4px;
+      margin-bottom: 8px;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .sk-line.title { height: 20px; width: 80%; }
+    .sk-line.short { width: 50%; }
+    .sk-line.xs    { height: 10px; width: 40%; }
+  </style>
+</head>
+<body>
+
+  <!-- SKELETON -->
+  <div id="detail-skeleton">
+    <div class="sk-hero"></div>
+    <div class="sk-card">
+      <div class="sk-poster"></div>
+      <div class="sk-meta">
+        <div class="sk-line title"></div>
+        <div class="sk-line short"></div>
+        <div class="sk-line xs"></div>
+        <div class="sk-line xs"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL CONTENT -->
+  <div id="detail-content" style="display:none">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      <div class="hero-bg-blur" id="hero-bg"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-topnav">
+        <button class="icon-btn" onclick="history.back()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+        </button>
+        <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+        <button class="icon-btn" onclick="shareAnime()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- POSTER + META -->
+    <div class="detail-card">
+      <div class="detail-poster">
+        <img id="detail-poster" src="" alt="">
+      </div>
+      <div class="detail-meta">
+        <div class="detail-title-text" id="detail-title">–</div>
+        <span class="status-pill" id="detail-status">–</span>
+        <div class="detail-info-grid">
+          <div class="info-item">
+            <div class="info-label">Studio</div>
+            <div class="info-value" id="detail-studio">–</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Tipe</div>
+            <div class="info-value" id="detail-type">–</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Season</div>
+            <div class="info-value" id="detail-season">–</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Durasi</div>
+            <div class="info-value" id="detail-duration">–</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="detail-actions">
+      <button class="btn-watch" id="btn-watch">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        Tonton Episode 1
+      </button>
+      <button class="btn-save" onclick="showToast('Login dulu untuk menyimpan!')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- SYNOPSIS -->
+    <div class="detail-section">
+      <div class="section-label">Sinopsis</div>
+      <div class="synopsis-text" id="detail-synopsis">–</div>
+      <span class="synopsis-toggle" id="synopsis-toggle" onclick="toggleSynopsis()">Baca selengkapnya</span>
+    </div>
+
+    <!-- GENRES -->
+    <div class="detail-section">
+      <div class="section-label">Genre</div>
+      <div id="detail-genres"></div>
+    </div>
+
+    <!-- EPISODES -->
+    <div class="detail-section" style="padding-bottom: 24px;">
+      <div class="ep-header">
+        <div class="section-label" style="margin-bottom:0">
+          <span id="ep-count">Episode</span>
+        </div>
+        <button id="sort-btn" onclick="toggleSort()">↓ Terbaru</button>
+      </div>
+      <div id="ep-list"></div>
+      <button id="ep-load-more" onclick="loadMoreEps()">Muat Lebih Banyak</button>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='/'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+      Beranda
+    </div>
+    <div class="nav-item" onclick="window.location.href='/search'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Cari
+    </div>
+    <div class="nav-item" onclick="window.location.href='/schedule'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Jadwal
+    </div>
+    <div class="nav-item" onclick="showToast('Login dulu untuk menyimpan!')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      Tersimpan
+    </div>
+    <div class="nav-item" onclick="showToast('Fitur segera hadir!')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Lainnya
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function showToast(msg) {
+      let t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function toggleSynopsis() {
+      const el  = document.getElementById('detail-synopsis');
+      const btn = document.getElementById('synopsis-toggle');
+      const expanded = el.classList.toggle('expanded');
+      btn.textContent = expanded ? 'Sembunyikan' : 'Baca selengkapnya';
+    }
+
+    function shareAnime() {
+      if (navigator.share) {
+        navigator.share({ title: document.title, url: window.location.href });
+      } else {
+        navigator.clipboard?.writeText(window.location.href);
+        showToast('Link disalin!');
+      }
+    }
+  </script>
+  <script src="/js/detail.js"></script>
+</body>
+</html>
