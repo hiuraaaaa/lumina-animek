@@ -29,7 +29,14 @@ function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
     const completed = a.status === 'Completed' || a.episode === 'Completed';
-    return `<div class="anime-card" onclick="window.location.href='/detail?slug=' + toAnimeSlug(slug)">
+    // Kalau oploverz_url adalah /series/ URL, pakai langsung. Kalau episode URL, extract series slug
+    const detailSlug = (() => {
+        const url = a.oploverz_url || '';
+        const m = url.match(/oploverz\.ch\/series\/([^\/]+)\/?$/);
+        if (m) return m[1]; // sudah anime slug
+        return toAnimeSlug(slug); // strip episode suffix
+    })();
+    return `<div class="anime-card" onclick="window.location.href='/detail?slug=${detailSlug}'">
         <div class="anime-card-poster">
             <img src="${a.poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
