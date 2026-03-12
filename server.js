@@ -1,7 +1,3 @@
-// ============================================
-//  SERVER.JS — Anime Streaming App
-// ============================================
-
 try { require('dotenv').config(); } catch(e) {}
 
 const express = require('express');
@@ -25,10 +21,11 @@ app.use('/api/anime', require('./api/anime'));
 
 const pub = (file) => path.join(__dirname, 'public', file);
 
-app.get('/',        (req, res) => res.sendFile(pub('index.html')));
-app.get('/search',  (req, res) => res.sendFile(pub('search.html')));
-app.get('/detail',  (req, res) => res.sendFile(pub('detail.html')));
-app.get('/watch',   (req, res) => res.sendFile(pub('watch.html')));
+app.get('/',          (req, res) => res.sendFile(pub('index.html')));
+app.get('/search',    (req, res) => res.sendFile(pub('search.html')));
+app.get('/detail',    (req, res) => res.sendFile(pub('detail.html')));
+app.get('/watch',     (req, res) => res.sendFile(pub('watch.html')));
+app.get('/schedule',  (req, res) => res.sendFile(pub('schedule.html')));
 
 app.use((req, res) => {
     res.status(404).json({ status: false, message: 'Not Found' });
