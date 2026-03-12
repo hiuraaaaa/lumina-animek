@@ -1,7 +1,23 @@
 const express = require('express');
 const https   = require('https');
 const http    = require('http');
+const axios   = require('axios');
+const cheerio = require('cheerio');
 const router  = express.Router();
+
+const OPLOVERZ_BASE  = 'https://oploverz.ch';
+const SCRAPE_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8',
+    'Referer': OPLOVERZ_BASE + '/'
+};
+
+async function scrapePage(url) {
+    const res = await axios.get(url, { headers: SCRAPE_HEADERS, timeout: 20000, maxRedirects: 5 });
+    if (res.status !== 200) throw new Error('HTTP ' + res.status);
+    return cheerio.load(res.data);
+}
 
 const API_BASE = process.env.API_BASE || 'https://www.sankavollerei.com/anime/oploverz';
 
@@ -99,11 +115,58 @@ router.get('/list', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Anime detail
+// Anime detail — scrape dari oploverz.ch
 router.get('/anime/:slug', async (req, res) => {
     try {
-        const data = await apiFetch(`${API_BASE}/anime/${req.params.slug}`);
-        res.json({ status: true, ...data });
+        const slug = req.params.slug;
+        const url  = `${OPLOVERZ_BASE}/anime/${slug}/`;
+        const $    = await scrapePage(url);
+
+        const title    = $('h1.entry-title, h1').first().text().trim();
+        const cover    = $('.bigcontent img[itemprop="image"]').first().attr('src') || null;
+        const synopsis = $('.entry-content[itemprop="description"]').first().text().trim()
+                      || $('.desc .entry-content').first().text().trim();
+
+        const info = {};
+        $('.infox .spe span').each((_, el) => {
+            const raw = $(el).text().trim();
+            const m   = raw.match(/^(.+?):\s*(.+)$/s);
+            if (m && m[1].trim().length < 30) info[m[1].trim()] = m[2].trim();
+        });
+
+        const genres = [];
+        $('.infox .genxed a').each((_, a) => {
+            const g = $(a).text().trim();
+            if (g) genres.push(g);
+        });
+
+        const episodes = [];
+        $('.eplister ul li').each((_, li) => {
+            const a    = $(li).find('a').first();
+            const link = a.attr('href') || null;
+            const num  = $(li).find('.epl-num').text().trim();
+            const name = $(li).find('.epl-title').text().trim();
+            const date = $(li).find('.epl-date').text().trim();
+            if (link) {
+                // Extract episode slug from oploverz URL
+                const m = link.match(/oploverz\.ch\/([^\/]+)\/?$/);
+                const epSlug = m ? m[1] : link;
+                episodes.push({ num, name, date, link, slug: epSlug });
+            }
+        });
+
+        res.json({
+            status: true,
+            detail: {
+                title,
+                poster: cover,
+                synopsis,
+                info,
+                genres,
+                total_episodes: episodes.length,
+                episodes
+            }
+        });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
