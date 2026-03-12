@@ -29,8 +29,8 @@ function parseCards($) {
         const eps   = $(el).find('.epx').text().trim();
         const type  = $(el).find('.typez').text().trim();
         if (title && link) {
-            const m    = link.match(/oploverz\.ch\/(?:anime|series)\/([^\/]+)\/?$/);
-            const slug = m ? m[1] : '';
+            // Extract slug dari URL — ambil path terakhir
+            const slug = link.replace(/\/$/, '').split('/').pop() || '';
             results.push({ title, poster: image, episode: eps, type, slug, oploverz_url: link });
         }
     });
@@ -136,8 +136,40 @@ router.get('/list', async (req, res) => {
 router.get('/anime/:slug', async (req, res) => {
     try {
         const slug = req.params.slug;
-        const url  = `${OPLOVERZ_BASE}/anime/${slug}/`;
-        const $    = await scrapePage(url);
+        let $;
+        let animeUrl;
+
+        // Coba /series/:slug/ dulu (format baru oploverz)
+        const tryUrls = [
+            `${OPLOVERZ_BASE}/series/${slug}/`,
+            `${OPLOVERZ_BASE}/anime/${slug}/`,
+        ];
+
+        let loaded = false;
+        for (const url of tryUrls) {
+            try {
+                const tmp = await scrapePage(url);
+                const t   = tmp('h1.entry-title, h1').first().text().trim();
+                if (t) { $ = tmp; animeUrl = url; loaded = true; break; }
+            } catch(e) {}
+        }
+
+        // Kalau masih gagal, coba fetch sebagai halaman episode → cari link /series/
+        if (!loaded) {
+            try {
+                const $ep      = await scrapePage(`${OPLOVERZ_BASE}/${slug}/`);
+                // "Series <a href="https://oploverz.ch/series/xxx/">"
+                const seriesLink = $ep('a[href*="/series/"]').first().attr('href');
+                if (seriesLink) {
+                    $ = await scrapePage(seriesLink);
+                    animeUrl = seriesLink;
+                    loaded = true;
+                }
+            } catch(e) {}
+        }
+
+        if (!loaded) return res.status(404).json({ status: false, message: 'Anime tidak ditemukan' });
+
 
         const title    = $('h1.entry-title, h1').first().text().trim();
         const cover    = $('.bigcontent img[itemprop="image"]').first().attr('src') || null;
