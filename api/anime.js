@@ -19,6 +19,24 @@ async function scrapePage(url) {
     return cheerio.load(res.data);
 }
 
+function parseCards($) {
+    const results = [];
+    $('article.bs').each((_, el) => {
+        const a     = $(el).find('a[itemprop="url"]').first();
+        const link  = a.attr('href') || null;
+        const title = a.attr('title') || $(el).find('img[itemprop="image"]').attr('title') || '';
+        const image = $(el).find('img[itemprop="image"]').attr('src') || null;
+        const eps   = $(el).find('.epx').text().trim();
+        const type  = $(el).find('.typez').text().trim();
+        if (title && link) {
+            const m    = link.match(/oploverz\.ch\/(?:anime|series)\/([^\/]+)\/?$/);
+            const slug = m ? m[1] : '';
+            results.push({ title, poster: image, episode: eps, type, slug, oploverz_url: link });
+        }
+    });
+    return results;
+}
+
 const API_BASE = process.env.API_BASE || 'https://www.sankavollerei.com/anime/oploverz';
 
 function apiFetch(url) {
@@ -50,13 +68,12 @@ function normalizeList(list = []) {
     return list.map(item => ({ ...item, slug: extractSlug(item) }));
 }
 
-// Home
+// Home — scrape oploverz.ch
 router.get('/home', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const data = await apiFetch(`${API_BASE}/home?page=${page}`);
-        data.anime_list = normalizeList(data.anime_list);
-        res.json({ status: true, ...data });
+        const $ = await scrapePage(`${OPLOVERZ_BASE}/`);
+        const result = parseCards($);
+        res.json({ status: true, anime_list: result });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
@@ -68,34 +85,34 @@ router.get('/schedule', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Search
+// Search — scrape oploverz.ch
 router.get('/search', async (req, res) => {
     try {
-        const { q = '', page = 1 } = req.query;
+        const { q = '' } = req.query;
         if (!q.trim()) return res.status(400).json({ status: false, message: 'Query kosong' });
-        const data = await apiFetch(`${API_BASE}/search/${encodeURIComponent(q)}?page=${page}`);
-        data.anime_list = normalizeList(data.anime_list);
-        res.json({ status: true, ...data });
+        const $ = await scrapePage(`${OPLOVERZ_BASE}/?s=${encodeURIComponent(q)}`);
+        const result = parseCards($);
+        res.json({ status: true, anime_list: result });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Ongoing
+// Ongoing — scrape oploverz.ch
 router.get('/ongoing', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const data = await apiFetch(`${API_BASE}/ongoing?page=${page}`);
-        data.anime_list = normalizeList(data.anime_list);
-        res.json({ status: true, ...data });
+        const $ = await scrapePage(`${OPLOVERZ_BASE}/series/?status=Ongoing&type=&order=update&page=${page}`);
+        const result = parseCards($);
+        res.json({ status: true, anime_list: result });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Completed
+// Completed — scrape oploverz.ch
 router.get('/completed', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const data = await apiFetch(`${API_BASE}/completed?page=${page}`);
-        data.anime_list = normalizeList(data.anime_list);
-        res.json({ status: true, ...data });
+        const $ = await scrapePage(`${OPLOVERZ_BASE}/series/?status=Completed&type=&order=update&page=${page}`);
+        const result = parseCards($);
+        res.json({ status: true, anime_list: result });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
