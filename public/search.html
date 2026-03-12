@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Cari Anime — AniStream</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* ── SEARCH BAR PAGE ── */
+    .search-page-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 0 16px 16px;
+      transition: border-color 0.2s;
+    }
+    .search-page-bar:focus-within {
+      border-color: var(--accent2);
+    }
+    .search-page-bar svg { color: var(--text3); flex-shrink: 0; }
+    .search-page-bar input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .search-page-bar input::placeholder { color: var(--text3); }
+
+    #search-clear {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg3);
+      color: var(--text3);
+      flex-shrink: 0;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* ── RESULT COUNT ── */
+    #result-count {
+      font-size: 12px;
+      color: var(--text3);
+      padding: 0 16px 12px;
+      font-weight: 500;
+    }
+
+    /* ── TRENDING / PLACEHOLDER ── */
+    .search-placeholder {
+      padding: 32px 16px;
+    }
+
+    .placeholder-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .placeholder-title::before {
+      content: '';
+      width: 3px; height: 14px;
+      background: var(--accent2);
+      border-radius: 2px;
+    }
+
+    .trending-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .trending-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .trending-item:active { background: var(--bg2); }
+
+    .trending-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text3);
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .trending-num.top { color: var(--accent2); }
+
+    .trending-text {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .trending-icon {
+      color: var(--text3);
+    }
+
+    /* ── GRID ── */
+    #search-grid {
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    /* ── LOAD MORE ── */
+    .load-more-wrap {
+      padding: 16px;
+    }
+
+    #load-more {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s;
+    }
+    #load-more:active { background: var(--bg3); }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <button class="icon-btn" onclick="history.back()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <polyline points="15,18 9,12 15,6"/>
+      </svg>
+    </button>
+    <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+    <div style="width:38px"></div>
+  </nav>
+
+  <!-- SEARCH BAR -->
+  <div class="search-page-bar">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="search-input" placeholder="Cari judul anime..." autocomplete="off" spellcheck="false">
+    <button id="search-clear">✕</button>
+  </div>
+
+  <!-- RESULT COUNT -->
+  <div id="result-count"></div>
+
+  <!-- SEARCH GRID -->
+  <div id="search-grid">
+    <!-- Diisi JS -->
+  </div>
+
+  <!-- PLACEHOLDER (ditampilkan saat belum search) -->
+  <div id="search-placeholder" class="search-placeholder">
+    <div class="placeholder-title">Populer Dicari</div>
+    <div class="trending-list">
+      ${[
+        'One Piece', 'Naruto', 'Jujutsu Kaisen', 'Bleach',
+        'Attack on Titan', 'Demon Slayer', 'Blue Lock', 'Frieren'
+      ].map((title, i) => `
+        <div class="trending-item" onclick="setSearch('${title}')">
+          <span class="trending-num ${i < 3 ? 'top' : ''}">${i + 1}</span>
+          <span class="trending-text">${title}</span>
+          <span class="trending-icon">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="9,18 15,12 9,6"/>
+            </svg>
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- LOAD MORE -->
+  <div class="load-more-wrap">
+    <button id="load-more">Muat Lebih Banyak</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='/'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+      Beranda
+    </div>
+    <div class="nav-item active">
+      <svg fill="currentColor" viewBox="0 0 24 24">
+        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      Cari
+    </div>
+    <div class="nav-item" onclick="window.location.href='/schedule'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Jadwal
+    </div>
+    <div class="nav-item" onclick="showToast('Login dulu untuk menyimpan!')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      Tersimpan
+    </div>
+    <div class="nav-item" onclick="showToast('Fitur segera hadir!')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Lainnya
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    function showToast(msg) {
+      let t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function setSearch(q) {
+      const input = document.getElementById('search-input');
+      if (input) {
+        input.value = q;
+        input.dispatchEvent(new Event('input'));
+      }
+    }
+  </script>
+  <script src="/js/search.js"></script>
+  <script>
+    // Hide placeholder saat ada hasil
+    const _origDoSearch = doSearch;
+    document.addEventListener('DOMContentLoaded', () => {
+      const placeholder = document.getElementById('search-placeholder');
+      const input       = document.getElementById('search-input');
+      if (input) {
+        input.addEventListener('input', () => {
+          if (placeholder) placeholder.style.display = input.value.trim() ? 'none' : 'block';
+        });
+        if (input.value.trim()) placeholder.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
+
