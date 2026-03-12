@@ -7,8 +7,6 @@ const path    = require('path');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.set('json spaces', 2);
-app.set('trust proxy', true);
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -21,18 +19,17 @@ app.use('/api/anime', require('./api/anime'));
 
 const pub = (file) => path.join(__dirname, 'public', file);
 
-app.get('/',         (req, res) => res.sendFile(pub('index.html')));
-app.get('/search',   (req, res) => res.sendFile(pub('search.html')));
-app.get('/detail',   (req, res) => res.sendFile(pub('detail.html')));
-app.get('/watch',    (req, res) => res.sendFile(pub('watch.html')));
-app.get('/schedule', (req, res) => res.sendFile(pub('schedule.html')));
-app.get('/genre',    (req, res) => res.sendFile(pub('genre.html')));
+app.get('/',          (req, res) => res.sendFile(pub('index.html')));
+app.get('/search',    (req, res) => res.sendFile(pub('search.html')));
+app.get('/detail',    (req, res) => res.sendFile(pub('detail.html')));
+app.get('/watch',     (req, res) => res.sendFile(pub('watch.html')));
+app.get('/schedule',  (req, res) => res.sendFile(pub('schedule.html')));
+app.get('/genre',     (req, res) => res.sendFile(pub('genre.html')));
+app.get('/login',     (req, res) => res.sendFile(pub('login.html')));
+app.get('/profile',   (req, res) => res.sendFile(pub('profile.html')));
+app.get('/watchlist', (req, res) => res.sendFile(pub('watchlist.html')));
 
 app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ status: false, message: 'Internal Server Error' });
-});
 
 if (require.main === module) {
     app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
