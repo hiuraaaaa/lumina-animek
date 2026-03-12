@@ -1,29 +1,26 @@
-// ============================================
-//  ANIME API PROXY
-//  Semua request ke sumber di-forward di sini
-//  sehingga API key & CORS aman di server
-// ============================================
-
 const express = require('express');
-const fetch   = require('node-fetch');
+const https   = require('https');
+const http    = require('http');
 const router  = express.Router();
 
 const API_BASE = process.env.API_BASE || 'https://www.sankavollerei.com/anime/oploverz';
 
-// Helper fetch dengan timeout
-async function apiFetch(url) {
-    const controller = new AbortController();
-    const timeout    = setTimeout(() => controller.abort(), 10000);
-    try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`Upstream error: ${res.status}`);
-        return await res.json();
-    } finally {
-        clearTimeout(timeout);
-    }
+function apiFetch(url) {
+    return new Promise((resolve, reject) => {
+        const client = url.startsWith('https') ? https : http;
+        const req = client.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try { resolve(JSON.parse(data)); }
+                catch(e) { reject(new Error('Invalid JSON response')); }
+            });
+        });
+        req.on('error', reject);
+        req.setTimeout(10000, () => { req.destroy(); reject(new Error('Request timeout')); });
+    });
 }
 
-// ── GET /api/anime/home?page=1 ──
 router.get('/home', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -34,7 +31,6 @@ router.get('/home', async (req, res) => {
     }
 });
 
-// ── GET /api/anime/search?q=naruto&page=1 ──
 router.get('/search', async (req, res) => {
     try {
         const { q = '', page = 1 } = req.query;
@@ -46,7 +42,6 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// ── GET /api/anime/detail/:slug ──
 router.get('/detail/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/detail/${req.params.slug}`);
@@ -56,7 +51,6 @@ router.get('/detail/:slug', async (req, res) => {
     }
 });
 
-// ── GET /api/anime/watch/:slug ──
 router.get('/watch/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/watch/${req.params.slug}`);
