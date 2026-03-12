@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Profil — AniStream</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* ── PROFILE HEADER ── */
+    .profile-header {
+      position: relative;
+      padding: 24px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .profile-avatar-wrap {
+      position: relative;
+      width: 88px; height: 88px;
+    }
+
+    .profile-avatar {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent2);
+      background: var(--bg3);
+    }
+
+    .avatar-placeholder {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 800; color: white;
+      border: 3px solid var(--accent2);
+    }
+
+    .avatar-edit-btn {
+      position: absolute; bottom: 0; right: 0;
+      width: 26px; height: 26px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      border: 2px solid var(--bg);
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .profile-email {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: -8px;
+    }
+
+    .profile-bio {
+      font-size: 13px;
+      color: var(--text2);
+      max-width: 280px;
+      line-height: 1.5;
+    }
+
+    /* ── STATS ── */
+    .profile-stats {
+      display: flex;
+      margin: 0 16px 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .stat-item {
+      flex: 1;
+      padding: 14px 8px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
+
+    /* ── MENU ── */
+    .profile-menu {
+      margin: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 8px 0 4px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .menu-item:active { background: var(--bg3); }
+
+    .menu-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .menu-item-text { flex: 1; }
+    .menu-item-title { font-size: 14px; font-weight: 700; }
+    .menu-item-sub   { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+    .menu-arrow { color: var(--text3); }
+
+    /* ── EDIT MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-sheet {
+      width: 100%; max-width: 480px;
+      background: var(--bg2);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 40px; height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      margin: 0 auto -4px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    /* ── LOGOUT ── */
+    .btn-logout {
+      width: 100%;
+      padding: 13px;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 12px;
+      color: #fca5a5;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn-logout:active { background: rgba(239,68,68,0.25); }
+
+    /* ── LOADING ── */
+    #profile-loading {
+      display: flex; align-items: center; justify-content: center;
+      height: 60vh;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--bg3);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <button class="icon-btn" onclick="history.back()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <polyline points="15,18 9,12 15,6"/>
+      </svg>
+    </button>
+    <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+    <button class="icon-btn" onclick="showEditModal()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- LOADING -->
+  <div id="profile-loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="profile-content" style="display:none; padding-bottom: calc(var(--bottom-nav) + 16px)">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+      <div class="profile-avatar-wrap">
+        <div id="avatar-display"></div>
+        <div class="avatar-edit-btn" onclick="showEditModal()">
+          <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="profile-name" id="profile-name">–</div>
+      <div class="profile-email" id="profile-email">–</div>
+      <div class="profile-bio" id="profile-bio" style="display:none"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-num" id="stat-watchlist">0</div>
+        <div class="stat-label">Tersimpan</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-watched">0</div>
+        <div class="stat-label">Ditonton</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="stat-days">0</div>
+        <div class="stat-label">Hari</div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="profile-menu">
+      <div class="menu-section-title">Aktivitas</div>
+
+      <div class="menu-item" onclick="window.location.href='/watchlist'">
+        <div class="menu-icon" style="background:rgba(37,99,235,0.15)">
+          <svg width="18" height="18" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Watchlist</div>
+          <div class="menu-item-sub">Anime yang kamu simpan</div>
+        </div>
+        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+
+      <div class="menu-item" onclick="showToast('Segera hadir!')">
+        <div class="menu-icon" style="background:rgba(34,197,94,0.15)">
+          <svg width="18" height="18" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+          </svg>
+        </div>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Riwayat Tonton</div>
+          <div class="menu-item-sub">Episode yang pernah kamu tonton</div>
+        </div>
+        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+
+      <div class="menu-section-title">Pengaturan</div>
+
+      <div class="menu-item" onclick="showEditModal()">
+        <div class="menu-icon" style="background:rgba(168,85,247,0.15)">
+          <svg width="18" height="18" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Edit Profil</div>
+          <div class="menu-item-sub">Ubah nama dan bio</div>
+        </div>
+        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+
+      <div class="menu-item" onclick="showToast('Segera hadir!')">
+        <div class="menu-icon" style="background:rgba(234,179,8,0.15)">
+          <svg width="18" height="18" fill="none" stroke="#eab308" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+        </div>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Notifikasi</div>
+          <div class="menu-item-sub">Kelola notifikasi anime</div>
+        </div>
+        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+
+      <button class="btn-logout" onclick="doLogout()">Keluar dari Akun</button>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Edit Profil</div>
+
+      <div class="form-group" style="display:flex;flex-direction:column;gap:6px">
+        <label class="form-label" style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Nama</label>
+        <input type="text" id="edit-name" class="form-input" placeholder="Nama kamu"
+               style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14px;color:var(--text);outline:none;width:100%">
+      </div>
+
+      <div class="form-group" style="display:flex;flex-direction:column;gap:6px">
+        <label class="form-label" style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Bio</label>
+        <textarea id="edit-bio" rows="3" placeholder="Ceritain dirimu..."
+                  style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:inherit;font-size:14px;color:var(--text);outline:none;width:100%;resize:none"></textarea>
+      </div>
+
+      <button class="btn-primary" id="btn-save" onclick="saveProfile()"
+              style="width:100%;padding:13px;background:var(--accent);color:white;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer">
+        Simpan
+      </button>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='/'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+      <span>Beranda</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/genre'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>Genre</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/schedule'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span>Jadwal</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/watchlist'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>Tersimpan</span>
+    </div>
+    <div class="nav-item active" onclick="window.location.href='/profile'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profil</span>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/js/utils.js"></script>
+  <script type="module">
+    import { auth, db, getUserProfile, updateUserProfile,
+        onAuthStateChanged, signOut, updateProfile
+    } from '/js/firebase.js';
+    import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let currentUser    = null;
+    let currentProfile = null;
+
+    onAuthStateChanged(auth, async (user) => {
+        const loading = document.getElementById('profile-loading');
+        const content = document.getElementById('profile-content');
+        if (!user) {
+            window.location.href = '/login';
+            return;
+        }
+        currentUser = user;
+        currentProfile = await getUserProfile(user.uid);
+        loading.style.display = 'none';
+        content.style.display = 'block';
+        renderProfile(user, currentProfile);
+    });
+
+    function renderProfile(user, profile) {
+        // Avatar
+        const avatarEl = document.getElementById('avatar-display');
+        if (user.photoURL) {
+            avatarEl.innerHTML = `<img src="${user.photoURL}" class="profile-avatar" alt="avatar">`;
+        } else {
+            const initial = (profile?.displayName || user.email || 'A')[0].toUpperCase();
+            avatarEl.innerHTML = `<div class="avatar-placeholder">${initial}</div>`;
+        }
+
+        // Info
+        document.getElementById('profile-name').textContent  = profile?.displayName || user.displayName || 'Anon';
+        document.getElementById('profile-email').textContent = user.email;
+
+        const bio = profile?.bio;
+        const bioEl = document.getElementById('profile-bio');
+        if (bio) { bioEl.textContent = bio; bioEl.style.display = 'block'; }
+
+        // Stats
+        document.getElementById('stat-watchlist').textContent = profile?.watchlist?.length || 0;
+        document.getElementById('stat-watched').textContent   = profile?.watchedCount || 0;
+        const days = profile?.createdAt
+            ? Math.floor((Date.now() - profile.createdAt.toMillis()) / 86400000)
+            : 0;
+        document.getElementById('stat-days').textContent = days;
+    }
+
+    window.showEditModal = () => {
+        document.getElementById('edit-name').value = currentProfile?.displayName || currentUser?.displayName || '';
+        document.getElementById('edit-bio').value  = currentProfile?.bio || '';
+        document.getElementById('edit-modal').classList.add('show');
+    };
+
+    window.closeEditModal = (e) => {
+        if (e.target === document.getElementById('edit-modal')) {
+            document.getElementById('edit-modal').classList.remove('show');
+        }
+    };
+
+    window.saveProfile = async () => {
+        const name = document.getElementById('edit-name').value.trim();
+        const bio  = document.getElementById('edit-bio').value.trim();
+        if (!name) return showToast('Nama tidak boleh kosong');
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true; btn.textContent = 'Menyimpan...';
+        try {
+            await updateProfile(currentUser, { displayName: name });
+            await updateUserProfile(currentUser.uid, { displayName: name, bio });
+            currentProfile = { ...currentProfile, displayName: name, bio };
+            renderProfile(currentUser, currentProfile);
+            document.getElementById('edit-modal').classList.remove('show');
+            showToast('Profil berhasil diupdate!');
+        } catch (e) {
+            showToast('Gagal menyimpan: ' + e.message);
+        } finally {
+            btn.disabled = false; btn.textContent = 'Simpan';
+        }
+    };
+
+    window.doLogout = async () => {
+        if (!confirm('Yakin mau keluar?')) return;
+        await signOut(auth);
+        window.location.href = '/';
+    };
+  </script>
+</body>
+</html>
+
