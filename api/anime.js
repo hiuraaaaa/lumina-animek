@@ -22,28 +22,19 @@ function apiFetch(url) {
     });
 }
 
-// Ekstrak slug dari oploverz_url
-// "https://oploverz.men/anime/one-piece/" → "one-piece"
-// "https://oploverz.men/one-piece-episode-1155-.../" → "one-piece-episode-1155-..."
 function extractSlug(item) {
     if (item.oploverz_url) {
-        const match = item.oploverz_url.match(/\/anime\/([^\/]+)\/?$/) ||
-                      item.oploverz_url.match(/\/([^\/]+)\/?$/);
-        if (match) return match[1];
+        const m = item.oploverz_url.match(/\/anime\/([^\/]+)\/?$/);
+        if (m) return m[1];
     }
     return item.slug;
 }
 
-// Normalize anime list — fix slug dari oploverz_url
 function normalizeList(list = []) {
-    return list.map(item => ({
-        ...item,
-        slug: extractSlug(item),
-        // isAnime = slug dari /anime/ path (bukan episode)
-        isAnime: /\/anime\/[^\/]+\/?$/.test(item.oploverz_url || '')
-    }));
+    return list.map(item => ({ ...item, slug: extractSlug(item) }));
 }
 
+// Home
 router.get('/home', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -53,6 +44,7 @@ router.get('/home', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// Schedule
 router.get('/schedule', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/schedule`);
@@ -60,6 +52,7 @@ router.get('/schedule', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// Search
 router.get('/search', async (req, res) => {
     try {
         const { q = '', page = 1 } = req.query;
@@ -70,6 +63,43 @@ router.get('/search', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// Ongoing
+router.get('/ongoing', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const data = await apiFetch(`${API_BASE}/ongoing?page=${page}`);
+        data.anime_list = normalizeList(data.anime_list);
+        res.json({ status: true, ...data });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// Completed
+router.get('/completed', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const data = await apiFetch(`${API_BASE}/completed?page=${page}`);
+        data.anime_list = normalizeList(data.anime_list);
+        res.json({ status: true, ...data });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// List (genre/filter)
+router.get('/list', async (req, res) => {
+    try {
+        const { genre = '', status = '', type = '', order = '', page = 1 } = req.query;
+        const params = new URLSearchParams();
+        if (genre)  params.set('genre', genre);
+        if (status) params.set('status', status);
+        if (type)   params.set('type', type);
+        if (order)  params.set('order', order);
+        params.set('page', page);
+        const data = await apiFetch(`${API_BASE}/list?${params.toString()}`);
+        data.anime_list = normalizeList(data.anime_list);
+        res.json({ status: true, ...data });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// Anime detail
 router.get('/anime/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/anime/${req.params.slug}`);
@@ -77,6 +107,7 @@ router.get('/anime/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// Episode detail (old)
 router.get('/detail/:slug', async (req, res) => {
     try {
         const data = await apiFetch(`${API_BASE}/detail/${req.params.slug}`);
@@ -84,9 +115,18 @@ router.get('/detail/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// Episode watch + streams
+router.get('/episode/:slug', async (req, res) => {
+    try {
+        const data = await apiFetch(`${API_BASE}/episode/${req.params.slug}`);
+        res.json({ status: true, ...data });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// Watch (alias)
 router.get('/watch/:slug', async (req, res) => {
     try {
-        const data = await apiFetch(`${API_BASE}/watch/${req.params.slug}`);
+        const data = await apiFetch(`${API_BASE}/episode/${req.params.slug}`);
         res.json({ status: true, ...data });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
