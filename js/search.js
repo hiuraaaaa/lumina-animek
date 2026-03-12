@@ -187,6 +187,7 @@ function initSearchInput() {
 //  INIT
 // ════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+    renderTrending();
     initSearchInput();
 
     if (currentQ) doSearch(currentQ, 1, false);
@@ -196,3 +197,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// ════════════════════════════
+//  TRENDING LIST
+// ════════════════════════════
+function renderTrending() {
+    const list = document.getElementById('trending-list');
+    if (!list) return;
+    const trending = [
+        'One Piece', 'Naruto', 'Jujutsu Kaisen', 'Bleach',
+        'Attack on Titan', 'Demon Slayer', 'Blue Lock', 'Frieren'
+    ];
+    list.innerHTML = trending.map((title, i) => `
+        <div class="trending-item" onclick="setSearch('${title}')">
+            <span class="trending-num ${i < 3 ? 'top' : ''}">${i + 1}</span>
+            <span class="trending-text">${title}</span>
+            <span class="trending-icon">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="9,18 15,12 9,6"/>
+                </svg>
+            </span>
+        </div>
+    `).join('');
+}
