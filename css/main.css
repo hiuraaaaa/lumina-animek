@@ -291,7 +291,14 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   overflow: hidden;
   cursor: pointer;
   background: var(--bg2);
-  animation: fadeUp 0.3s ease both;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.anime-card.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .anime-card-poster {
