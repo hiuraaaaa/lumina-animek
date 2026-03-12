@@ -69,9 +69,23 @@ async function fetchJSON(url) {
 }
 
 // ── NAVIGATE ──
-function goDetail(anime) {
-    if (typeof anime === 'string') { window.location.href = `/detail?slug=${anime}`; return; }
-    const slug = anime.slug || extractSlug(anime);
-    window.location.href = `/detail?slug=${slug}`;
+function toAnimeSlug(slug) {
+    return slug
+        .replace(/-episode-[^/]*/i, '')
+        .replace(/-subtitle-.*/i, '')
+        .replace(/-sub-indo.*/i, '')
+        .replace(/-end$/i, '')
+        .replace(/-tamat$/i, '')
+        .replace(/-\d+$/, '')
+        .replace(/-+$/, '')
+        .trim();
 }
 
+function goDetail(anime) {
+    if (typeof anime === 'string') {
+        window.location.href = '/detail?slug=' + toAnimeSlug(anime);
+        return;
+    }
+    const slug = anime.slug || extractSlug(anime);
+    window.location.href = '/detail?slug=' + toAnimeSlug(slug);
+}
