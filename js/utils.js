@@ -18,15 +18,6 @@ function extractSlug(item) {
     return item.slug;
 }
 
-function toAnimeSlug(slug) {
-    return slug.replace(/-episode-.*/i, '')
-               .replace(/-subtitle-.*/i, '')
-               .replace(/-sub-indo.*/i, '')
-               .replace(/-end$/i, '')
-               .replace(/-tamat$/i, '')
-               .trim();
-}
-
 // ── BADGE ──
 const BADGE_MAP = {
     'TV': 'badge-tv', 'Movie': 'badge-movie', 'Special': 'badge-special',
@@ -38,7 +29,7 @@ function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
     const completed = a.status === 'Completed' || a.episode === 'Completed';
-    return `<div class="anime-card" onclick="window.location.href='/detail?slug=${slug}'">
+    return `<div class="anime-card" onclick="window.location.href='/detail?slug=${toAnimeSlug(slug)}'">
         <div class="anime-card-poster">
             <img src="${a.poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
