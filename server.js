@@ -26,6 +26,7 @@ app.get('/search',   (req, res) => res.sendFile(pub('search.html')));
 app.get('/detail',   (req, res) => res.sendFile(pub('detail.html')));
 app.get('/watch',    (req, res) => res.sendFile(pub('watch.html')));
 app.get('/schedule', (req, res) => res.sendFile(pub('schedule.html')));
+app.get('/genre',    (req, res) => res.sendFile(pub('genre.html')));
 
 app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
 app.use((err, req, res, next) => {
