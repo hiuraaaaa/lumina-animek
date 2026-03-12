@@ -1,20 +1,38 @@
 // ── DETAIL PAGE ──
 
 const params      = new URLSearchParams(window.location.search);
-const SLUG        = params.get('slug') || '';
+const RAW_SLUG    = params.get('slug') || '';
 let   epSort      = 'desc';
 let   epPage      = 1;
 const EP_PER_PAGE = 50;
 let   allEps      = [];
 
 // ════════════════════════════
+//  SLUG HELPER
+//  Konversi slug episode → slug anime
+//  "one-piece-episode-1155-subtitle-indonesia" → "one-piece"
+//  "one-piece" → "one-piece" (sudah benar)
+// ════════════════════════════
+function toAnimeSlug(slug) {
+    // Hapus "-episode-..." ke belakang
+    return slug.replace(/-episode-.*/i, '')
+               .replace(/-subtitle-.*/i, '')
+               .replace(/-sub-indo.*/i, '')
+               .replace(/-end$/i, '')
+               .replace(/-tamat$/i, '')
+               .trim();
+}
+
+const ANIME_SLUG = toAnimeSlug(RAW_SLUG);
+
+// ════════════════════════════
 //  FETCH
 // ════════════════════════════
 async function fetchDetail(slug) {
-    const res = await fetch(`/api/anime/detail/${slug}`);
+    const res = await fetch(`/api/anime/anime/${slug}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (!data.detail) throw new Error('Data detail tidak ditemukan');
+    if (!data.detail) throw new Error('Data tidak ditemukan');
     return data;
 }
 
@@ -27,15 +45,13 @@ function renderDetail(data) {
 
     document.title = `${d.title} — AniStream`;
 
-    // Hero bg blur
     const heroBg = document.getElementById('hero-bg');
     if (heroBg) heroBg.style.backgroundImage = `url('${d.poster}')`;
 
-    // Poster
     const posterEl = document.getElementById('detail-poster');
     if (posterEl) {
-        posterEl.src = d.poster;
-        posterEl.alt = d.title;
+        posterEl.src    = d.poster;
+        posterEl.alt    = d.title;
         posterEl.onerror = () => posterEl.src = 'https://placehold.co/160x240/181818/333?text=No+Image';
     }
 
@@ -46,20 +62,18 @@ function renderDetail(data) {
     setText('detail-type',     info.type     || '–');
     setText('detail-updated',  info.updated_on || '–');
 
-    // Status
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
-        const ongoing         = info.status === 'Ongoing';
-        statusEl.textContent  = info.status || '–';
-        statusEl.className    = `status-pill ${ongoing ? 'ongoing' : 'completed'}`;
+        const ongoing        = info.status === 'Ongoing';
+        statusEl.textContent = info.status || '–';
+        statusEl.className   = `status-pill ${ongoing ? 'ongoing' : 'completed'}`;
     }
 
-    // Synopsis
+    // Synopsis — filter SEO spam
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
-        let syn = (d.synopsis || 'Tidak ada sinopsis.').replace(/^Sinopsis:\s*/i, '');
-        // Potong kalau terlalu panjang & cuma berisi SEO spam
-        if (syn.length < 50 || syn.includes('oploverz')) {
+        let syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
+        if (!syn || syn.toLowerCase().includes('oploverz') || syn.length < 80) {
             syn = 'Sinopsis belum tersedia untuk anime ini.';
         }
         synEl.textContent = syn;
@@ -91,12 +105,11 @@ function setText(id, val) {
 function updateWatchBtn() {
     const btn = document.getElementById('btn-watch');
     if (!btn || !allEps.length) return;
-    // Tonton dari episode pertama (index 0 di list asli = ep terlama)
-    const firstEp = allEps[0];
-    btn.onclick = () => goWatch(firstEp.slug);
-    btn.innerHTML = `
+    const firstEp  = allEps[0];
+    btn.onclick    = () => goWatch(firstEp.slug);
+    btn.innerHTML  = `
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-        Tonton Ep ${firstEp.episode}
+        Tonton Ep ${firstEp.episode.trim()}
     `;
 }
 
@@ -119,15 +132,13 @@ function renderEpisodes() {
     setText('ep-count', `${allEps.length} Episode`);
 
     if (!slice.length) {
-        container.innerHTML = `<div class="empty-state" style="padding:32px 0">
-            <p>Belum ada episode tersedia</p></div>`;
+        container.innerHTML = `<div class="empty-state" style="padding:32px 0"><p>Belum ada episode tersedia</p></div>`;
         return;
     }
 
     container.innerHTML = slice.map((ep, i) => `
-        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms"
-             onclick="goWatch('${ep.slug}')">
-            <div class="ep-num">Ep ${ep.episode}</div>
+        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${ep.slug}')">
+            <div class="ep-num">Ep ${ep.episode.trim()}</div>
             <div class="ep-info">
                 <div class="ep-title">${ep.title}</div>
                 <div class="ep-date">${ep.release_date || ''}</div>
@@ -162,40 +173,30 @@ function toggleSort() {
 // ════════════════════════════
 //  NAVIGATE
 // ════════════════════════════
-function goWatch(slug) {
-    window.location.href = `/watch?slug=${slug}`;
-}
-
-function goSearch(genre) {
-    window.location.href = `/search?q=${encodeURIComponent(genre)}`;
-}
+function goWatch(slug)  { window.location.href = `/watch?slug=${slug}`; }
+function goSearch(q)    { window.location.href = `/search?q=${encodeURIComponent(q)}`; }
 
 // ════════════════════════════
 //  SKELETON
 // ════════════════════════════
 function showSkeleton() {
-    const sk = document.getElementById('detail-skeleton');
-    const ct = document.getElementById('detail-content');
-    if (sk) sk.style.display = 'block';
-    if (ct) ct.style.display = 'none';
+    document.getElementById('detail-skeleton').style.display = 'block';
+    document.getElementById('detail-content').style.display  = 'none';
 }
-
 function hideSkeleton() {
-    const sk = document.getElementById('detail-skeleton');
-    const ct = document.getElementById('detail-content');
-    if (sk) sk.style.display = 'none';
-    if (ct) ct.style.display = 'block';
+    document.getElementById('detail-skeleton').style.display = 'none';
+    document.getElementById('detail-content').style.display  = 'block';
 }
 
 // ════════════════════════════
 //  INIT
 // ════════════════════════════
 async function init() {
-    if (!SLUG) { window.location.href = '/'; return; }
+    if (!RAW_SLUG) { window.location.href = '/'; return; }
 
     showSkeleton();
     try {
-        const data = await fetchDetail(SLUG);
+        const data = await fetchDetail(ANIME_SLUG);
         hideSkeleton();
         renderDetail(data);
     } catch (err) {
@@ -209,9 +210,8 @@ async function init() {
                 </svg>
                 <h3>Gagal Memuat</h3>
                 <p>${err.message}</p>
-                <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
-                    ← Kembali
-                </button>
+                <small style="color:var(--text3);display:block;margin-top:8px">Slug: ${ANIME_SLUG}</small>
+                <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">← Kembali</button>
             </div>`;
     }
 }
