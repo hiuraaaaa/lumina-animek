@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AniStream – Nonton Anime Subtitle Indonesia</title>
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="navbar-logo">ANI<span>STREAM</span></a>
+    <ul class="navbar-nav">
+      <li><a href="index.html" class="active">Beranda</a></li>
+      <li><a href="search.html?filter=tv">TV Series</a></li>
+      <li><a href="search.html?filter=movie">Movie</a></li>
+      <li><a href="search.html?filter=ongoing">Ongoing</a></li>
+    </ul>
+    <div class="navbar-right">
+      <div class="search-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Cari anime...">
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <!-- Diisi JS -->
+    </section>
+
+    <!-- FILTER + GRID -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Update Terbaru</h2>
+        <a href="search.html" class="section-link">
+          Lihat Semua
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Semua</button>
+        <button class="filter-tab" data-filter="TV">TV</button>
+        <button class="filter-tab" data-filter="Movie">Movie</button>
+        <button class="filter-tab" data-filter="Special">Special</button>
+        <button class="filter-tab" data-filter="Live Action">Live Action</button>
+        <button class="filter-tab" data-filter="OVA">OVA</button>
+      </div>
+
+      <!-- Anime Grid -->
+      <div id="anime-grid" class="anime-grid">
+        <!-- Diisi JS -->
+      </div>
+    </section>
+
+    <!-- PAGINATION -->
+    <div id="pagination" class="pagination">
+      <!-- Diisi JS -->
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span class="footer-logo">ANISTREAM</span>
+    <span>© 2026 AniStream. Data dari Oploverz.</span>
+    <span>Dibuat dengan ❤️ untuk weeb Indonesia</span>
+  </footer>
+
+  <script src="../js/home.js"></script>
+</body>
+</html>
