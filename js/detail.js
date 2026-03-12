@@ -111,7 +111,7 @@ function updateWatchBtn() {
     btn.onclick    = () => goWatch(firstEp.slug);
     btn.innerHTML  = `
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-        Tonton Ep ${firstEp.episode.trim()}
+        Tonton Ep ${firstEp.num || firstEp.episode || ""}
     `;
 }
 
@@ -140,7 +140,7 @@ function renderEpisodes() {
 
     container.innerHTML = slice.map((ep, i) => `
         <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${ep.slug}')">
-            <div class="ep-num">Ep ${ep.episode.trim()}</div>
+            <div class="ep-num">Ep ${ep.num || ep.episode || ""}</div>
             <div class="ep-info">
                 <div class="ep-title">${ep.title}</div>
                 <div class="ep-date">${ep.release_date || ''}</div>
