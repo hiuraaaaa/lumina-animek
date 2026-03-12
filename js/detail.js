@@ -1,23 +1,25 @@
 // ── DETAIL PAGE ──
 
-const params   = new URLSearchParams(window.location.search);
-const SLUG     = params.get('slug') || '';
-let   epSort   = 'desc'; // desc = terbaru dulu
-let   epPage   = 1;
+const params      = new URLSearchParams(window.location.search);
+const SLUG        = params.get('slug') || '';
+let   epSort      = 'desc';
+let   epPage      = 1;
 const EP_PER_PAGE = 50;
-let   allEps   = [];
+let   allEps      = [];
 
 // ════════════════════════════
 //  FETCH
 // ════════════════════════════
 async function fetchDetail(slug) {
-    const res = await fetch(`/api/anime/anime/${slug}`);
-    if (!res.ok) throw new Error('Gagal memuat detail');
-    return res.json();
+    const res = await fetch(`/api/anime/detail/${slug}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.detail) throw new Error('Data detail tidak ditemukan');
+    return data;
 }
 
 // ════════════════════════════
-//  RENDER INFO
+//  RENDER
 // ════════════════════════════
 function renderDetail(data) {
     const d    = data.detail;
@@ -25,30 +27,29 @@ function renderDetail(data) {
 
     document.title = `${d.title} — AniStream`;
 
-    // Hero poster bg
+    // Hero bg blur
     const heroBg = document.getElementById('hero-bg');
     if (heroBg) heroBg.style.backgroundImage = `url('${d.poster}')`;
 
     // Poster
-    const poster = document.getElementById('detail-poster');
-    if (poster) {
-        poster.src = d.poster;
-        poster.alt = d.title;
-        poster.onerror = () => poster.src = 'https://placehold.co/160x240/181818/333?text=No+Image';
+    const posterEl = document.getElementById('detail-poster');
+    if (posterEl) {
+        posterEl.src = d.poster;
+        posterEl.alt = d.title;
+        posterEl.onerror = () => posterEl.src = 'https://placehold.co/160x240/181818/333?text=No+Image';
     }
 
-    // Title & meta
-    setText('detail-title', d.title);
-    setText('detail-studio', info.studio || '–');
-    setText('detail-season', info.season || '–');
+    setText('detail-title',    d.title);
+    setText('detail-studio',   info.studio   || '–');
+    setText('detail-season',   info.season   || '–');
     setText('detail-duration', info.duration || '–');
-    setText('detail-type', info.type || '–');
-    setText('detail-updated', info.updated_on || '–');
+    setText('detail-type',     info.type     || '–');
+    setText('detail-updated',  info.updated_on || '–');
 
-    // Status badge
+    // Status
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
-        const ongoing = info.status === 'Ongoing';
+        const ongoing         = info.status === 'Ongoing';
         statusEl.textContent  = info.status || '–';
         statusEl.className    = `status-pill ${ongoing ? 'ongoing' : 'completed'}`;
     }
@@ -56,24 +57,27 @@ function renderDetail(data) {
     // Synopsis
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
-        let syn = d.synopsis || 'Tidak ada sinopsis.';
-        // Hapus prefix "Sinopsis: " kalau ada
-        syn = syn.replace(/^Sinopsis:\s*/i, '');
+        let syn = (d.synopsis || 'Tidak ada sinopsis.').replace(/^Sinopsis:\s*/i, '');
+        // Potong kalau terlalu panjang & cuma berisi SEO spam
+        if (syn.length < 50 || syn.includes('oploverz')) {
+            syn = 'Sinopsis belum tersedia untuk anime ini.';
+        }
         synEl.textContent = syn;
     }
 
     // Genres
     const genresEl = document.getElementById('detail-genres');
-    if (genresEl && d.genres?.length) {
-        genresEl.innerHTML = d.genres.map(g =>
+    if (genresEl) {
+        genresEl.innerHTML = (d.genres || []).map(g =>
             `<span class="genre-chip" onclick="goSearch('${g.name}')">${g.name}</span>`
-        ).join('');
+        ).join('') || '<span style="color:var(--text3);font-size:13px">–</span>';
     }
 
     // Episodes
-    allEps  = d.episode_list || [];
-    epPage  = 1;
+    allEps = d.episode_list || [];
+    epPage = 1;
     renderEpisodes();
+    updateWatchBtn();
 }
 
 function setText(id, val) {
@@ -82,7 +86,22 @@ function setText(id, val) {
 }
 
 // ════════════════════════════
-//  RENDER EPISODES
+//  WATCH BUTTON
+// ════════════════════════════
+function updateWatchBtn() {
+    const btn = document.getElementById('btn-watch');
+    if (!btn || !allEps.length) return;
+    // Tonton dari episode pertama (index 0 di list asli = ep terlama)
+    const firstEp = allEps[0];
+    btn.onclick = () => goWatch(firstEp.slug);
+    btn.innerHTML = `
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        Tonton Ep ${firstEp.episode}
+    `;
+}
+
+// ════════════════════════════
+//  EPISODE LIST
 // ════════════════════════════
 function getSortedEps() {
     const sorted = [...allEps];
@@ -92,21 +111,21 @@ function getSortedEps() {
 
 function renderEpisodes() {
     const container = document.getElementById('ep-list');
-    const sorted    = getSortedEps();
-    const start     = 0;
-    const end       = epPage * EP_PER_PAGE;
-    const slice     = sorted.slice(start, end);
+    if (!container) return;
+
+    const sorted = getSortedEps();
+    const slice  = sorted.slice(0, epPage * EP_PER_PAGE);
 
     setText('ep-count', `${allEps.length} Episode`);
 
     if (!slice.length) {
-        container.innerHTML = `<div class="empty-state" style="padding:40px 0">
-            <p>Belum ada episode</p></div>`;
+        container.innerHTML = `<div class="empty-state" style="padding:32px 0">
+            <p>Belum ada episode tersedia</p></div>`;
         return;
     }
 
     container.innerHTML = slice.map((ep, i) => `
-        <div class="ep-item" style="animation-delay:${(i % 20) * 30}ms"
+        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms"
              onclick="goWatch('${ep.slug}')">
             <div class="ep-num">Ep ${ep.episode}</div>
             <div class="ep-info">
@@ -121,10 +140,9 @@ function renderEpisodes() {
         </div>
     `).join('');
 
-    // Load more btn
     const loadMoreBtn = document.getElementById('ep-load-more');
     if (loadMoreBtn) {
-        loadMoreBtn.style.display = end < sorted.length ? 'block' : 'none';
+        loadMoreBtn.style.display = (epPage * EP_PER_PAGE) < sorted.length ? 'block' : 'none';
     }
 }
 
@@ -173,13 +191,9 @@ function hideSkeleton() {
 //  INIT
 // ════════════════════════════
 async function init() {
-    if (!SLUG) {
-        window.location.href = '/';
-        return;
-    }
+    if (!SLUG) { window.location.href = '/'; return; }
 
     showSkeleton();
-
     try {
         const data = await fetchDetail(SLUG);
         hideSkeleton();
@@ -189,13 +203,17 @@ async function init() {
         document.getElementById('detail-content').innerHTML = `
             <div class="empty-state" style="padding:80px 24px">
                 <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <h3>Gagal Memuat</h3>
                 <p>${err.message}</p>
+                <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
+                    ← Kembali
+                </button>
             </div>`;
     }
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
