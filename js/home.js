@@ -1,259 +1,262 @@
-// ============================================
-// HOME PAGE LOGIC
-// ============================================
-
-const API_BASE = 'https://www.sankavollerei.com/anime/oploverz';
-
-let currentPage = 1;
+// ── HOME PAGE ──
+let currentPage   = 1;
 let currentFilter = 'all';
-let isLoading = false;
+let isLoading     = false;
+let hasNext       = false;
+let allAnime      = [];
+let heroAnime     = [];
+let heroIndex     = 0;
+let heroTimer     = null;
 
-// ---- FETCH DATA ----
-async function fetchAnime(page = 1) {
-  const res = await fetch(`${API_BASE}/home?page=${page}`);
-  if (!res.ok) throw new Error('Gagal fetch data');
-  return res.json();
+// ════════════════════════════
+//  FETCH
+// ════════════════════════════
+async function fetchHome(page = 1) {
+    const res = await fetch(`/api/anime/home?page=${page}`);
+    if (!res.ok) throw new Error('Gagal memuat data');
+    return res.json();
 }
 
-// ---- RENDER CARDS ----
-function getBadgeClass(type) {
-  const map = {
-    'TV': 'badge-tv',
-    'Movie': 'badge-movie',
-    'Special': 'badge-special',
-    'Live Action': 'badge-live-action',
-    'OVA': 'badge-ova',
-  };
-  return map[type] || 'badge-tv';
-}
+// ════════════════════════════
+//  HERO SLIDER
+// ════════════════════════════
+function renderHero(list) {
+    heroAnime = list.slice(0, 8);
+    heroIndex  = 0;
 
-function renderCard(anime, index) {
-  const isCompleted = anime.status === 'Completed' || anime.episode === 'Completed';
-  const isOngoing = !isCompleted && anime.status !== 'Completed';
-  const delay = (index % 20) * 40;
+    const slider = document.getElementById('hero-slides');
+    const dots   = document.getElementById('hero-dot-nav');
+    if (!slider || !dots) return;
 
-  return `
-    <div class="anime-card" style="animation-delay:${delay}ms" onclick="goToDetail('${anime.slug}')">
-      <div class="anime-card-poster">
-        <img src="${anime.poster}" alt="${anime.title}" loading="lazy" 
-             onerror="this.src='https://via.placeholder.com/200x300/16161f/555?text=No+Image'">
-        <div class="anime-card-overlay">
-          <div class="play-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <polygon points="5,3 19,12 5,21"/>
-            </svg>
-          </div>
+    slider.innerHTML = heroAnime.map(a => `
+        <div class="hero-slide" onclick="goDetail('${a.slug}')">
+            <img src="${a.poster}" alt="${a.title}" loading="lazy"
+                 onerror="this.src='https://placehold.co/480x270/181818/333?text=No+Image'">
+            <div class="hero-slide-overlay"></div>
+            <div class="hero-slide-info">
+                <div class="hero-badge">LATEST</div>
+                <div class="hero-title">${a.title}</div>
+            </div>
         </div>
-        <span class="anime-card-badge ${getBadgeClass(anime.type)}">${anime.type}</span>
-        ${isCompleted ? `<span class="anime-card-status status-completed">Tamat</span>` : ''}
-        ${isOngoing && anime.episode && anime.episode !== 'Ongoing' ? `<span class="anime-card-status status-ongoing">Ongoing</span>` : ''}
-      </div>
-      <div class="anime-card-info">
-        <div class="anime-card-title">${anime.title}</div>
-        <div class="anime-card-episode">${anime.episode || '–'}</div>
-      </div>
-    </div>
-  `;
+    `).join('');
+
+    dots.innerHTML = heroAnime.map((_, i) =>
+        `<div class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goHero(${i})"></div>`
+    ).join('');
+
+    updateHeroCounter();
+    startHeroAuto();
 }
 
-function renderSkeleton(count = 20) {
-  return Array.from({ length: count }, () => `
-    <div class="skeleton">
-      <div class="skeleton-poster"></div>
-      <div class="skeleton-info">
-        <div class="skeleton-text"></div>
-        <div class="skeleton-text"></div>
-      </div>
-    </div>
-  `).join('');
+function goHero(index) {
+    heroIndex = index;
+    const slides = document.getElementById('hero-slides');
+    if (slides) slides.style.transform = `translateX(-${index * 100}%)`;
+
+    document.querySelectorAll('.hero-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+    });
+    updateHeroCounter();
+    resetHeroAuto();
 }
 
-// ---- RENDER PAGINATION ----
-function renderPagination(pagination) {
-  const { currentPage, hasNext, hasPrev } = pagination;
-  const container = document.getElementById('pagination');
-  if (!container) return;
-
-  let pages = [];
-  const range = 2;
-  for (let i = Math.max(1, currentPage - range); i <= currentPage + range; i++) {
-    pages.push(i);
-  }
-
-  container.innerHTML = `
-    <button class="page-btn" onclick="changePage(${currentPage - 1})" ${!hasPrev ? 'disabled' : ''}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="15,18 9,12 15,6"/>
-      </svg>
-    </button>
-    ${pages.map(p => `
-      <button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="changePage(${p})">${p}</button>
-    `).join('')}
-    <button class="page-btn" onclick="changePage(${currentPage + 1})" ${!hasNext ? 'disabled' : ''}>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="9,18 15,12 9,6"/>
-      </svg>
-    </button>
-  `;
+function updateHeroCounter() {
+    const counter = document.getElementById('hero-counter');
+    if (counter) counter.textContent = `${heroIndex + 1}/${heroAnime.length}`;
 }
 
-// ---- FILTER ----
-function filterAnime(list) {
-  if (currentFilter === 'all') return list;
-  return list.filter(a => a.type?.toLowerCase() === currentFilter.toLowerCase());
+function startHeroAuto() {
+    clearInterval(heroTimer);
+    heroTimer = setInterval(() => {
+        goHero((heroIndex + 1) % heroAnime.length);
+    }, 4000);
 }
 
-// ---- HERO ----
-function renderHero(anime) {
-  if (!anime) return;
-  const el = document.getElementById('hero');
-  if (!el) return;
-
-  el.innerHTML = `
-    <img class="hero-image" src="${anime.poster}" alt="${anime.title}">
-    <div class="hero-bg"></div>
-    <div class="hero-content">
-      <div class="hero-badge">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-        ${anime.status === 'Completed' ? 'Tamat' : 'Sedang Tayang'}
-      </div>
-      <h1 class="hero-title">${anime.title}</h1>
-      <div class="hero-meta">
-        <span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          ${anime.type}
-        </span>
-        <span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-          ${anime.episode}
-        </span>
-        <span>Oploverz</span>
-      </div>
-      <div class="hero-buttons">
-        <a href="watch.html?slug=${anime.slug}" class="btn-primary">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-          Tonton Sekarang
-        </a>
-        <a href="detail.html?slug=${anime.slug}" class="btn-secondary">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Detail
-        </a>
-      </div>
-    </div>
-  `;
+function resetHeroAuto() {
+    clearInterval(heroTimer);
+    startHeroAuto();
 }
 
-// ---- LOAD PAGE ----
-async function loadPage(page = 1) {
-  if (isLoading) return;
-  isLoading = true;
+// ════════════════════════════
+//  RENDER CARDS
+// ════════════════════════════
+function badgeClass(type) {
+    const map = { 'TV': 'badge-tv', 'Movie': 'badge-movie', 'Special': 'badge-special', 'Live Action': 'badge-live-action', 'OVA': 'badge-ova' };
+    return map[type] || 'badge-tv';
+}
 
-  const grid = document.getElementById('anime-grid');
-  const pagination = document.getElementById('pagination');
-
-  if (grid) grid.innerHTML = renderSkeleton();
-  if (pagination) pagination.innerHTML = '';
-
-  try {
-    const data = await fetchAnime(page);
-    currentPage = page;
-
-    const filtered = filterAnime(data.anime_list || []);
-
-    // Hero: pakai anime pertama yang ada poster
-    renderHero(data.anime_list?.[0]);
-
-    if (filtered.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <h3>Tidak ada anime</h3>
-          <p>Coba filter lain atau muat ulang halaman</p>
+function renderCard(a, i) {
+    const completed = a.status === 'Completed' || a.episode === 'Completed';
+    return `
+        <div class="anime-card" style="animation-delay:${(i % 12) * 40}ms" onclick="goDetail('${a.slug}')">
+            <div class="anime-card-poster">
+                <img src="${a.poster}" alt="${a.title}" loading="lazy"
+                     onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
+                <div class="anime-card-poster-overlay"></div>
+                <div class="anime-card-info">
+                    <div class="anime-card-title">${a.title}</div>
+                    <div class="anime-card-ep">${a.episode || '–'}</div>
+                </div>
+                <span class="anime-card-badge ${badgeClass(a.type)}">${a.type}</span>
+                <span class="status-dot ${completed ? 'completed' : 'ongoing'}"></span>
+            </div>
         </div>
-      `;
-    } else {
-      grid.innerHTML = filtered.map((a, i) => renderCard(a, i)).join('');
-    }
-
-    renderPagination(data.pagination);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  } catch (err) {
-    if (grid) grid.innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <h3>Gagal Memuat</h3>
-        <p>${err.message}</p>
-      </div>
     `;
-    showToast('Gagal memuat data. Cek koneksi kamu.');
-  } finally {
-    isLoading = false;
-  }
 }
 
-// ---- CHANGE PAGE ----
-function changePage(page) {
-  if (page < 1 || isLoading) return;
-  loadPage(page);
+function renderSkeleton(n = 12) {
+    return Array.from({ length: n }, () => `
+        <div class="skeleton-card">
+            <div class="skeleton-poster"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line short"></div>
+        </div>
+    `).join('');
 }
 
-// ---- FILTER TAB ----
+// ════════════════════════════
+//  FILTER
+// ════════════════════════════
+function applyFilter(list) {
+    if (currentFilter === 'all') return list;
+    return list.filter(a => a.type?.toLowerCase() === currentFilter.toLowerCase());
+}
+
 function setFilter(type) {
-  currentFilter = type;
-  document.querySelectorAll('.filter-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.filter === type);
-  });
-  loadPage(1);
+    currentFilter = type;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.filter === type));
+    renderGrid();
 }
 
-// ---- NAVIGATE ----
-function goToDetail(slug) {
-  window.location.href = `detail.html?slug=${slug}`;
-}
+function renderGrid() {
+    const grid    = document.getElementById('anime-grid');
+    const filtered = applyFilter(allAnime);
 
-// ---- TOAST ----
-function showToast(msg) {
-  let toast = document.getElementById('toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.className = 'toast';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-// ---- SEARCH ----
-function initSearch() {
-  const input = document.getElementById('search-input');
-  if (!input) return;
-  let timeout;
-  input.addEventListener('input', () => {
-    clearTimeout(timeout);
-    const q = input.value.trim();
-    if (!q) { loadPage(1); return; }
-    timeout = setTimeout(() => {
-      window.location.href = `search.html?q=${encodeURIComponent(q)}`;
-    }, 500);
-  });
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      const q = input.value.trim();
-      if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+    if (!filtered.length) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1">
+                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <h3>Tidak ada anime</h3>
+                <p>Coba filter lain</p>
+            </div>`;
+        return;
     }
-  });
+
+    grid.innerHTML = filtered.map((a, i) => renderCard(a, i)).join('');
 }
 
-// ---- INIT ----
+// ════════════════════════════
+//  LOAD PAGE
+// ════════════════════════════
+async function loadPage(page = 1, append = false) {
+    if (isLoading) return;
+    isLoading = true;
+
+    const grid    = document.getElementById('anime-grid');
+    const loadBtn = document.getElementById('load-more');
+
+    if (!append) grid.innerHTML = renderSkeleton();
+    if (loadBtn)  loadBtn.textContent = 'Memuat...';
+
+    try {
+        const data = await fetchHome(page);
+        currentPage = page;
+        hasNext     = data.pagination?.hasNext || false;
+
+        const list = data.anime_list || [];
+
+        if (!append) {
+            allAnime = list;
+            renderHero(list);
+        } else {
+            allAnime = [...allAnime, ...list];
+        }
+
+        renderGrid();
+
+        // Show/hide load more
+        if (loadBtn) loadBtn.style.display = hasNext ? 'block' : 'none';
+
+    } catch (err) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1">
+                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <h3>Gagal Memuat</h3>
+                <p>${err.message}</p>
+            </div>`;
+        showToast('Gagal memuat. Cek koneksi kamu.');
+    } finally {
+        isLoading = false;
+        if (loadBtn && hasNext) loadBtn.textContent = 'Muat Lebih Banyak';
+    }
+}
+
+// ════════════════════════════
+//  NAVIGATE
+// ════════════════════════════
+function goDetail(slug) {
+    window.location.href = `/detail?slug=${slug}`;
+}
+
+// ════════════════════════════
+//  TOAST
+// ════════════════════════════
+function showToast(msg) {
+    let toast = document.getElementById('toast');
+    if (!toast) { toast = document.createElement('div'); toast.id = 'toast'; toast.className = 'toast'; document.body.appendChild(toast); }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════
+//  SEARCH
+// ════════════════════════════
+function initSearch() {
+    const input = document.getElementById('search-input');
+    if (!input) return;
+    let t;
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const q = input.value.trim();
+            if (q) window.location.href = `/search?q=${encodeURIComponent(q)}`;
+        }
+    });
+    input.addEventListener('input', () => {
+        clearTimeout(t);
+        const q = input.value.trim();
+        if (q.length > 2) t = setTimeout(() => { window.location.href = `/search?q=${encodeURIComponent(q)}`; }, 700);
+    });
+}
+
+// ════════════════════════════
+//  ANNOUNCEMENT
+// ════════════════════════════
+function initAnnouncement() {
+    const btn = document.getElementById('close-announce');
+    const el  = document.getElementById('announcement');
+    if (btn && el) {
+        btn.addEventListener('click', () => {
+            el.style.display = 'none';
+            sessionStorage.setItem('announce_closed', '1');
+        });
+        if (sessionStorage.getItem('announce_closed')) el.style.display = 'none';
+    }
+}
+
+// ════════════════════════════
+//  INIT
+// ════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-  loadPage(1);
-  initSearch();
+    loadPage(1);
+    initSearch();
+    initAnnouncement();
 
-  document.querySelectorAll('.filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => setFilter(tab.dataset.filter));
-  });
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => setFilter(chip.dataset.filter));
+    });
+
+    document.getElementById('load-more')?.addEventListener('click', () => {
+        if (hasNext) loadPage(currentPage + 1, true);
+    });
 });
-
