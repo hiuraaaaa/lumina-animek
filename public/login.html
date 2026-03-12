@@ -146,6 +146,11 @@
       b.textContent = on ? 'Memuat...' : (id === 'btn-login' ? 'Masuk' : 'Buat Akun');
     }
 
+    function goNext() {
+      const next = new URLSearchParams(window.location.search).get('next');
+      window.location.href = next || '/profile';
+    }
+
     window.switchTab = (tab) => {
       document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
       document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
@@ -168,7 +173,7 @@
       try {
         const { user } = await FB.signInWithEmailAndPassword(FB.auth, email, pw);
         await FB.createUserProfile(user);
-        const next = new URLSearchParams(window.location.search).get('next'); window.location.href = next || '/profile';
+        goNext();
       } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-login', false); }
     };
 
@@ -183,7 +188,7 @@
         const { user } = await FB.createUserWithEmailAndPassword(FB.auth, email, pw);
         await FB.updateProfile(user, { displayName: name });
         await FB.createUserProfile(user, { displayName: name });
-        const next = new URLSearchParams(window.location.search).get('next'); window.location.href = next || '/profile';
+        goNext();
       } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-register', false); }
     };
 
@@ -192,14 +197,14 @@
       try {
         const { user } = await FB.signInWithPopup(FB.auth, FB.googleProvider);
         await FB.createUserProfile(user);
-        const next = new URLSearchParams(window.location.search).get('next'); window.location.href = next || '/profile';
+        goNext();
       } catch(e) { if (e.code !== 'auth/popup-closed-by-user') showError(FB.friendlyError(e.code)); }
     };
 
     // Redirect kalau udah login
     window.addEventListener('firebase-ready', () => {
       FB.onAuthStateChanged(FB.auth, user => {
-        if (user) const next = new URLSearchParams(window.location.search).get('next'); window.location.href = next || '/profile';
+        if (user) goNext();
       });
     });
   </script>
