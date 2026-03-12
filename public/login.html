@@ -7,152 +7,63 @@
   <link rel="stylesheet" href="/css/main.css">
   <style>
     body { display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 0; }
-
     .auth-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 32px 24px;
-      gap: 24px;
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 32px 24px; gap: 24px;
     }
-
-    .auth-logo {
-      text-align: center;
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
+    .auth-logo { text-align: center; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
     .auth-logo span { color: var(--accent2); }
-
-    .auth-subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: var(--text3);
-      margin-top: -16px;
-    }
-
+    .auth-subtitle { text-align: center; font-size: 13px; color: var(--text3); margin-top: -16px; }
     .auth-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+      display: flex; flex-direction: column; gap: 14px;
     }
-
     .auth-tabs {
-      display: flex;
-      background: var(--bg3);
-      border-radius: 10px;
-      padding: 3px;
-      gap: 3px;
+      display: flex; background: var(--bg3);
+      border-radius: 10px; padding: 3px; gap: 3px;
     }
-
     .auth-tab {
-      flex: 1;
-      padding: 8px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text3);
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
+      flex: 1; padding: 8px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; color: var(--text3);
+      text-align: center; cursor: pointer; transition: all 0.2s;
     }
-    .auth-tab.active {
-      background: var(--bg2);
-      color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-
+    .auth-tab.active { background: var(--bg2); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
     .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
-
+    .form-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
     .form-input {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-family: inherit;
-      font-size: 14px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-      width: 100%;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      font-family: inherit; font-size: 14px; color: var(--text);
+      outline: none; width: 100%; transition: border-color 0.2s;
     }
     .form-input:focus { border-color: var(--accent2); }
     .form-input::placeholder { color: var(--text3); }
-
     .input-wrap { position: relative; }
-    .toggle-pw {
-      position: absolute; right: 12px; top: 50%;
-      transform: translateY(-50%);
-      color: var(--text3); font-size: 13px; cursor: pointer;
-    }
-
+    .toggle-pw { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); cursor: pointer; }
     .btn-primary {
-      width: 100%;
-      padding: 13px;
-      background: var(--accent);
-      color: white;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      transition: all 0.2s;
-      border: none;
-      cursor: pointer;
+      width: 100%; padding: 13px; background: var(--accent); color: white;
+      border-radius: 10px; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary:active { background: #1d4ed8; transform: scale(0.99); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .divider {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 11px; color: var(--text3);
-    }
-    .divider::before, .divider::after {
-      content: ''; flex: 1; height: 1px; background: var(--border);
-    }
-
+    .divider { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text3); }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
     .btn-google {
-      width: 100%;
-      padding: 12px;
-      background: white;
-      color: #333;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
+      width: 100%; padding: 12px; background: white; color: #333;
+      border-radius: 10px; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      border: none; cursor: pointer; transition: all 0.2s;
     }
-    .btn-google:active { background: #f1f1f1; transform: scale(0.99); }
-
     .error-msg {
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #fca5a5;
-      display: none;
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #fca5a5; display: none;
     }
-
-    .auth-footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text3);
-    }
+    .auth-footer { text-align: center; font-size: 12px; color: var(--text3); }
     .auth-footer a { color: var(--accent2); font-weight: 700; }
   </style>
 </head>
 <body>
-
   <div class="auth-wrap">
     <div>
       <div class="auth-logo">ani<span>stream</span></div>
@@ -160,16 +71,13 @@
     </div>
 
     <div class="auth-card">
-      <!-- TABS -->
       <div class="auth-tabs">
         <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Masuk</div>
         <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Daftar</div>
       </div>
 
-      <!-- ERROR -->
       <div class="error-msg" id="error-msg"></div>
 
-      <!-- LOGIN FORM -->
       <div id="form-login">
         <div style="display:flex;flex-direction:column;gap:14px">
           <div class="form-group">
@@ -179,15 +87,14 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <div class="input-wrap">
-              <input type="password" id="login-pw" class="form-input" placeholder="••••••••">
-              <span class="toggle-pw" onclick="togglePw('login-pw', this)">👁</span>
+              <input type="password" id="login-pw" class="form-input" placeholder="••••••••" style="padding-right:40px">
+              <span class="toggle-pw" onclick="togglePw('login-pw',this)">👁</span>
             </div>
           </div>
           <button class="btn-primary" id="btn-login" onclick="doLogin()">Masuk</button>
         </div>
       </div>
 
-      <!-- REGISTER FORM -->
       <div id="form-register" style="display:none">
         <div style="display:flex;flex-direction:column;gap:14px">
           <div class="form-group">
@@ -201,8 +108,8 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <div class="input-wrap">
-              <input type="password" id="reg-pw" class="form-input" placeholder="min. 6 karakter">
-              <span class="toggle-pw" onclick="togglePw('reg-pw', this)">👁</span>
+              <input type="password" id="reg-pw" class="form-input" placeholder="min. 6 karakter" style="padding-right:40px">
+              <span class="toggle-pw" onclick="togglePw('reg-pw',this)">👁</span>
             </div>
           </div>
           <button class="btn-primary" id="btn-register" onclick="doRegister()">Buat Akun</button>
@@ -211,7 +118,6 @@
 
       <div class="divider">atau</div>
 
-      <!-- GOOGLE -->
       <button class="btn-google" onclick="doGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48">
           <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -223,106 +129,79 @@
       </button>
     </div>
 
-    <div class="auth-footer">
-      Dengan masuk, kamu setuju dengan <a href="#">Syarat & Ketentuan</a>
-    </div>
+    <div class="auth-footer">Dengan masuk, kamu setuju dengan <a href="#">Syarat & Ketentuan</a></div>
   </div>
 
   <div id="toast" class="toast"></div>
-
-  <script type="module">
-    import { auth, googleProvider, createUserProfile,
-        onAuthStateChanged, signInWithEmailAndPassword,
-        createUserWithEmailAndPassword, signInWithPopup, updateProfile
-    } from '/js/firebase.js';
-
-    // Redirect kalau udah login
-    onAuthStateChanged(auth, user => {
-        if (user) window.location.href = '/profile';
-    });
-
+  <script src="/js/utils.js"></script>
+  <script src="/js/firebase.js"></script>
+  <script>
     function showError(msg) {
-        const el = document.getElementById('error-msg');
-        el.textContent = msg;
-        el.style.display = 'block';
+      const el = document.getElementById('error-msg');
+      el.textContent = msg; el.style.display = msg ? 'block' : 'none';
     }
-    function hideError() { document.getElementById('error-msg').style.display = 'none'; }
-    function setLoading(btnId, loading) {
-        const btn = document.getElementById(btnId);
-        btn.disabled = loading;
-        btn.textContent = loading ? 'Memuat...' : (btnId === 'btn-login' ? 'Masuk' : 'Buat Akun');
+    function setLoading(id, on) {
+      const b = document.getElementById(id);
+      b.disabled = on;
+      b.textContent = on ? 'Memuat...' : (id === 'btn-login' ? 'Masuk' : 'Buat Akun');
     }
 
     window.switchTab = (tab) => {
-        document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
-        document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-        document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
-        document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-        hideError();
+      document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
+      document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      showError('');
     };
 
     window.togglePw = (id, el) => {
-        const input = document.getElementById(id);
-        input.type  = input.type === 'password' ? 'text' : 'password';
-        el.textContent = input.type === 'password' ? '👁' : '🙈';
+      const input = document.getElementById(id);
+      input.type  = input.type === 'password' ? 'text' : 'password';
+      el.textContent = input.type === 'password' ? '👁' : '🙈';
     };
 
     window.doLogin = async () => {
-        const email = document.getElementById('login-email').value.trim();
-        const pw    = document.getElementById('login-pw').value;
-        if (!email || !pw) return showError('Email dan password wajib diisi');
-        hideError(); setLoading('btn-login', true);
-        try {
-            const { user } = await signInWithEmailAndPassword(auth, email, pw);
-            await createUserProfile(user);
-            window.location.href = '/profile';
-        } catch (e) {
-            showError(friendlyError(e.code));
-            setLoading('btn-login', false);
-        }
+      const email = document.getElementById('login-email').value.trim();
+      const pw    = document.getElementById('login-pw').value;
+      if (!email || !pw) return showError('Email dan password wajib diisi');
+      showError(''); setLoading('btn-login', true);
+      try {
+        const { user } = await FB.signInWithEmailAndPassword(FB.auth, email, pw);
+        await FB.createUserProfile(user);
+        window.location.href = '/profile';
+      } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-login', false); }
     };
 
     window.doRegister = async () => {
-        const name  = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const pw    = document.getElementById('reg-pw').value;
-        if (!name || !email || !pw) return showError('Semua field wajib diisi');
-        if (pw.length < 6) return showError('Password minimal 6 karakter');
-        hideError(); setLoading('btn-register', true);
-        try {
-            const { user } = await createUserWithEmailAndPassword(auth, email, pw);
-            await updateProfile(user, { displayName: name });
-            await createUserProfile(user, { displayName: name });
-            window.location.href = '/profile';
-        } catch (e) {
-            showError(friendlyError(e.code));
-            setLoading('btn-register', false);
-        }
+      const name  = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pw    = document.getElementById('reg-pw').value;
+      if (!name || !email || !pw) return showError('Semua field wajib diisi');
+      if (pw.length < 6) return showError('Password minimal 6 karakter');
+      showError(''); setLoading('btn-register', true);
+      try {
+        const { user } = await FB.createUserWithEmailAndPassword(FB.auth, email, pw);
+        await FB.updateProfile(user, { displayName: name });
+        await FB.createUserProfile(user, { displayName: name });
+        window.location.href = '/profile';
+      } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-register', false); }
     };
 
     window.doGoogle = async () => {
-        hideError();
-        try {
-            const { user } = await signInWithPopup(auth, googleProvider);
-            await createUserProfile(user);
-            window.location.href = '/profile';
-        } catch (e) {
-            if (e.code !== 'auth/popup-closed-by-user') showError(friendlyError(e.code));
-        }
+      showError('');
+      try {
+        const { user } = await FB.signInWithPopup(FB.auth, FB.googleProvider);
+        await FB.createUserProfile(user);
+        window.location.href = '/profile';
+      } catch(e) { if (e.code !== 'auth/popup-closed-by-user') showError(FB.friendlyError(e.code)); }
     };
 
-    function friendlyError(code) {
-        const map = {
-            'auth/user-not-found':      'Email tidak terdaftar',
-            'auth/wrong-password':      'Password salah',
-            'auth/email-already-in-use':'Email sudah dipakai',
-            'auth/invalid-email':       'Format email tidak valid',
-            'auth/weak-password':       'Password terlalu lemah',
-            'auth/too-many-requests':   'Terlalu banyak percobaan, coba lagi nanti',
-            'auth/network-request-failed': 'Cek koneksi internet kamu',
-        };
-        return map[code] || 'Terjadi kesalahan, coba lagi';
-    }
+    // Redirect kalau udah login
+    window.addEventListener('firebase-ready', () => {
+      FB.onAuthStateChanged(FB.auth, user => {
+        if (user) window.location.href = '/profile';
+      });
+    });
   </script>
 </body>
 </html>
