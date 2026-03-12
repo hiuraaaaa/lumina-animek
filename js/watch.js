@@ -1,179 +1,145 @@
-// ── WATCH PAGE ──
+// ── WATCH PAGE — animeinweb API ──
 
-const params  = new URLSearchParams(window.location.search);
-const SLUG    = params.get('slug') || '';
-let   streams = [];
-let   activeStream = 0;
+const API_STREAM = 'https://animeinweb.com/api/proxy/3/2';
+const AINheaders = {
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36 OPR/95.0.0.0',
+    'Referer': 'https://animeinweb.com'
+};
 
-// ════════════════════════════
-//  FETCH
-// ════════════════════════════
-async function fetchEpisode(slug) {
-    const res = await fetch(`/api/anime/episode/${slug}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!data.streams) throw new Error('Data stream tidak ditemukan');
-    return data;
+const params   = new URLSearchParams(window.location.search);
+const EP_ID    = params.get('id') || '';
+const MOVIE_ID = params.get('mid') || '';
+
+let servers    = [];
+let currentIdx = 0;
+let epData     = null;
+let epNext     = null;
+
+async function fetchStream(id) {
+    const res  = await fetch(`${API_STREAM}/episode/streamnew/${id}`, { headers: AINheaders });
+    const json = await res.json();
+    if (!json.data) throw new Error('Data tidak ditemukan');
+    return json.data;
 }
 
-// Ekstrak anime slug dari episode slug
-function toAnimeSlug(slug) {
-    return slug.replace(/-episode-.*/i, '')
-               .replace(/-subtitle-.*/i, '')
-               .replace(/-sub-indo.*/i, '')
-               .replace(/-end$/i, '')
-               .replace(/-tamat$/i, '')
-               .trim();
+async function init() {
+    if (!EP_ID) { window.location.href = '/'; return; }
+    try {
+        const data = await fetchStream(EP_ID);
+        epData  = data.episode;
+        epNext  = data.episode_next;
+        servers = data.server || [];
+
+        const movieTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Anime';
+        document.title = `${epData.title} — AniStream`;
+        document.getElementById('ep-title').textContent = movieTitle;
+        document.getElementById('ep-sub').textContent   = epData.title + (epData.key_time ? ` • ${epData.key_time}` : '');
+
+        renderServers();
+
+        if (epNext) document.getElementById('btn-next').disabled = false;
+        if (params.get('prev')) document.getElementById('btn-prev').disabled = false;
+
+        const directIdx = servers.findIndex(s => s.type === 'direct');
+        playServer(directIdx >= 0 ? directIdx : 0);
+
+        renderDownloads();
+    } catch (e) {
+        document.getElementById('player-loading').style.display = 'none';
+        document.getElementById('player-error').style.display   = 'flex';
+        document.getElementById('ep-title').textContent = 'Gagal memuat';
+        showToast('Error: ' + e.message);
+    }
 }
 
-// ════════════════════════════
-//  RENDER PLAYER
-// ════════════════════════════
-function renderPlayer(data) {
-    streams = data.streams || [];
-
-    document.title = `${data.episode_title || 'Watch'} — AniStream`;
-
-    // Title
-    setText('watch-title', data.episode_title || '–');
-
-    // Back link ke detail
-    const animeSlug = toAnimeSlug(SLUG);
-    const backBtn   = document.getElementById('back-btn');
-    if (backBtn) backBtn.href = `/detail?slug=${animeSlug}`;
-
-    // Render stream tabs
-    renderStreamTabs();
-
-    // Load stream pertama
-    if (streams.length > 0) loadStream(0);
-
-    // Render downloads
-    renderDownloads(data.downloads || []);
-}
-
-// ════════════════════════════
-//  STREAM TABS
-// ════════════════════════════
-function renderStreamTabs() {
-    const tabs = document.getElementById('stream-tabs');
-    if (!tabs) return;
-    tabs.innerHTML = streams.map((s, i) => `
-        <button class="stream-tab ${i === 0 ? 'active' : ''}"
-                onclick="loadStream(${i})">${s.name || `Server ${i + 1}`}</button>
-    `).join('');
-}
-
-function loadStream(index) {
-    activeStream = index;
-    const stream = streams[index];
-    if (!stream) return;
-
-    // Update tab active
-    document.querySelectorAll('.stream-tab').forEach((t, i) => {
-        t.classList.toggle('active', i === index);
-    });
-
-    // Update iframe
-    const iframe  = document.getElementById('video-iframe');
-    const noVideo = document.getElementById('no-video');
-
-    if (!stream.url) {
-        if (iframe)  iframe.style.display  = 'none';
-        if (noVideo) noVideo.style.display = 'flex';
+function renderServers() {
+    const wrap = document.getElementById('server-tabs');
+    if (!servers.length) {
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada server</span>';
         return;
     }
-
-    if (iframe) {
-        iframe.style.display = 'block';
-        iframe.src = stream.url;
-    }
-    if (noVideo) noVideo.style.display = 'none';
-}
-
-// ════════════════════════════
-//  DOWNLOADS
-// ════════════════════════════
-function renderDownloads(downloads) {
-    const container = document.getElementById('download-list');
-    if (!container || !downloads.length) {
-        const section = document.getElementById('download-section');
-        if (section) section.style.display = 'none';
-        return;
-    }
-
-    // Group by resolution
-    const grouped = {};
-    downloads.forEach(d => {
-        if (!grouped[d.resolution]) grouped[d.resolution] = [];
-        grouped[d.resolution].push(d);
-    });
-
-    const resOrder = ['360p', '480p', '720p', '1080p', '10bit'];
-    const sorted   = resOrder.filter(r => grouped[r]).concat(
-        Object.keys(grouped).filter(r => !resOrder.includes(r))
-    );
-
-    container.innerHTML = sorted.map(res => `
-        <div class="dl-group">
-            <div class="dl-res">${res}</div>
-            <div class="dl-links">
-                ${grouped[res].map(d => `
-                    <a href="${d.url}" target="_blank" rel="noopener" class="dl-btn">
-                        ${d.name}
-                    </a>
-                `).join('')}
-            </div>
+    wrap.innerHTML = servers.map((s, i) => `
+        <div class="server-tab ${s.type === 'direct' ? 'direct' : ''}" id="stab-${i}" onclick="playServer(${i})">
+            <span class="tab-name">${s.name || 'Server ' + (i+1)}</span>
+            <span class="tab-quality">${s.quality || ''}</span>
         </div>
     `).join('');
 }
 
-// ════════════════════════════
-//  HELPERS
-// ════════════════════════════
-function setText(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-}
+window.playServer = function(idx) {
+    if (idx < 0 || idx >= servers.length) return;
+    currentIdx = idx;
+    const s      = servers[idx];
+    const video  = document.getElementById('video-player');
+    const iframe = document.getElementById('iframe-player');
 
-// ════════════════════════════
-//  INIT
-// ════════════════════════════
-async function init() {
-    if (!SLUG) { window.location.href = '/'; return; }
+    document.querySelectorAll('.server-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
+    showLoading(); hideError();
 
-    const loading = document.getElementById('watch-loading');
-    const content = document.getElementById('watch-content');
-
-    if (loading) loading.style.display = 'flex';
-    if (content) content.style.display = 'none';
-
-    try {
-        const data = await fetchEpisode(SLUG);
-        if (loading) loading.style.display = 'none';
-        if (content) content.style.display = 'block';
-        renderPlayer(data);
-    } catch (err) {
-        if (loading) loading.style.display = 'none';
-        if (content) {
-            content.style.display = 'block';
-            content.innerHTML = `
-                <div class="empty-state" style="padding:80px 24px">
-                    <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <h3>Gagal Memuat</h3>
-                    <p>${err.message}</p>
-                    <button onclick="history.back()"
-                        style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
-                        ← Kembali
-                    </button>
-                </div>`;
-        }
+    if (s.type === 'direct') {
+        iframe.style.display = 'none';
+        video.style.display  = 'block';
+        video.src = s.link;
+        video.load();
+        video.play().catch(() => {});
+    } else {
+        video.style.display  = 'none';
+        video.src = '';
+        iframe.style.display = 'block';
+        iframe.src = s.link;
     }
+};
+
+window.tryNextServer = function() {
+    const next = currentIdx + 1;
+    if (next < servers.length) playServer(next);
+    else showToast('Tidak ada server lain');
+};
+
+window.onVideoError = function() { hideLoading(); showError(); };
+window.hideLoading  = function() { document.getElementById('player-loading').style.display = 'none'; };
+
+function showLoading() {
+    document.getElementById('player-loading').style.display = 'flex';
+    document.getElementById('player-error').style.display   = 'none';
+}
+function showError() {
+    document.getElementById('player-error').style.display   = 'flex';
+    document.getElementById('player-loading').style.display = 'none';
+}
+function hideError() { document.getElementById('player-error').style.display = 'none'; }
+
+window.goNext = function() {
+    if (!epNext) return;
+    const title = encodeURIComponent(params.get('title') || '');
+    window.location.href = `/watch?id=${epNext.id}&mid=${epNext.id_movie || MOVIE_ID}&title=${title}&prev=${EP_ID}`;
+};
+
+window.goPrev = function() {
+    const prevId = params.get('prev');
+    if (!prevId) return;
+    history.back();
+};
+
+function renderDownloads() {
+    const wrap    = document.getElementById('dl-group');
+    const directs = servers.filter(s => s.type === 'direct');
+    if (!directs.length) {
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada link download</span>';
+        return;
+    }
+    wrap.innerHTML = directs.map(s => `
+        <a href="${s.link}" target="_blank" class="btn-dl">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ${s.name || 'Download'}
+            <span class="dl-quality">${s.quality}</span>
+            ${s.key_file_size ? `<span class="dl-quality">${parseFloat(s.key_file_size).toFixed(0)}MB</span>` : ''}
+        </a>
+    `).join('');
 }
 
-document.addEventListener('DOMContentLoaded', init);
-
+init();
