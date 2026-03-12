@@ -142,8 +142,8 @@ function renderEpisodes() {
         <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${ep.slug}')">
             <div class="ep-num">Ep ${ep.num || ep.episode || ""}</div>
             <div class="ep-info">
-                <div class="ep-title">${ep.title}</div>
-                <div class="ep-date">${ep.release_date || ''}</div>
+                <div class="ep-title">${ep.name || ep.title || ''}</div>
+                <div class="ep-date">${ep.date || ep.release_date || ''}</div>
             </div>
             <div class="ep-play">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
