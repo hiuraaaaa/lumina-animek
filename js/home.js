@@ -73,7 +73,9 @@ function renderGrid() {
             </svg><h3>Tidak ada anime</h3><p>Coba filter lain</p></div>`;
         return;
     }
-    grid.innerHTML = filtered.map((a, i) => renderCard(a, i)).join('');
+    // Potong ke kelipatan 3 biar grid rapi
+    const trimmed = filtered.slice(0, Math.floor(filtered.length / 3) * 3);
+    grid.innerHTML = (trimmed.length ? trimmed : filtered).map((a, i) => renderCard(a, i)).join('');
 }
 
 // ── LOAD ──
