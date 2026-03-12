@@ -56,39 +56,41 @@ function renderDetail(data) {
     }
 
     setText('detail-title',    d.title);
-    setText('detail-studio',   info.studio   || '–');
-    setText('detail-season',   info.season   || '–');
-    setText('detail-duration', info.duration || '–');
-    setText('detail-type',     info.type     || '–');
-    setText('detail-updated',  info.updated_on || '–');
+    setText('detail-studio',   info.Studio   || info.studio   || '–');
+    setText('detail-season',   info.Season   || info.season   || '–');
+    setText('detail-duration', info.Duration || info.duration || '–');
+    setText('detail-type',     info.Type     || info.type     || '–');
 
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
-        const ongoing        = info.status === 'Ongoing';
-        statusEl.textContent = info.status || '–';
-        statusEl.className   = `status-pill ${ongoing ? 'ongoing' : 'completed'}`;
+        const status         = info.Status || info.status || '–';
+        const ongoing        = status === 'Ongoing';
+        statusEl.textContent = status;
+        statusEl.className   = 'status-pill ' + (ongoing ? 'ongoing' : 'completed');
     }
 
-    // Synopsis — filter SEO spam
+    // Synopsis
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
         let syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
-        if (!syn || syn.toLowerCase().includes('oploverz') || syn.length < 80) {
+        if (!syn || syn.toLowerCase().includes('oploverz') || syn.length < 20) {
             syn = 'Sinopsis belum tersedia untuk anime ini.';
         }
         synEl.textContent = syn;
     }
 
-    // Genres
+    // Genres — array of strings
     const genresEl = document.getElementById('detail-genres');
     if (genresEl) {
-        genresEl.innerHTML = (d.genres || []).map(g =>
-            `<span class="genre-chip" onclick="goSearch('${g.name}')">${g.name}</span>`
-        ).join('') || '<span style="color:var(--text3);font-size:13px">–</span>';
+        const genres = d.genres || [];
+        genresEl.innerHTML = genres.map(g => {
+            const name = typeof g === 'string' ? g : (g.name || '');
+            return '<span class="genre-chip" onclick="goSearch(\'' + name + '\')">' + name + '</span>';
+        }).join('') || '<span style="color:var(--text3);font-size:13px">–</span>';
     }
 
     // Episodes
-    allEps = d.episode_list || [];
+    allEps = d.episodes || d.episode_list || [];
     epPage = 1;
     renderEpisodes();
     updateWatchBtn();
@@ -199,6 +201,9 @@ async function init() {
         const data = await fetchDetail(ANIME_SLUG);
         hideSkeleton();
         renderDetail(data);
+        // Expose ke window untuk watchlist
+        window.currentAnimeSlug = ANIME_SLUG;
+        window.currentAnimeData = data.detail;
     } catch (err) {
         hideSkeleton();
         document.getElementById('detail-content').innerHTML = `
