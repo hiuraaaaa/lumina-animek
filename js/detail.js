@@ -29,8 +29,16 @@ const ANIME_SLUG = toAnimeSlug(RAW_SLUG);
 //  FETCH
 // ════════════════════════════
 async function fetchDetail(slug) {
-    const res = await fetch(`/api/anime/anime/${slug}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // Support ?url= param dari otakudesu
+    const urlParam = new URLSearchParams(window.location.search).get('url');
+    let apiUrl;
+    if (urlParam) {
+        apiUrl = '/api/anime/detail?url=' + encodeURIComponent(urlParam);
+    } else {
+        apiUrl = '/api/anime/anime/' + slug;
+    }
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data.detail) throw new Error('Data tidak ditemukan');
     return data;
@@ -43,27 +51,30 @@ function renderDetail(data) {
     const d    = data.detail;
     const info = d.info || {};
 
+    // Otakudesu info keys
+    // Status, Studio, Durasi, Total Episode, Tipe, Genre, dll
+
     document.title = `${d.title} — AniStream`;
 
     const heroBg = document.getElementById('hero-bg');
-    if (heroBg) heroBg.style.backgroundImage = `url('${d.poster}')`;
+    if (heroBg) heroBg.style.backgroundImage = `url('${d.cover || d.poster}')`;
 
     const posterEl = document.getElementById('detail-poster');
     if (posterEl) {
-        posterEl.src    = d.poster;
+        posterEl.src    = d.cover || d.poster;
         posterEl.alt    = d.title;
         posterEl.onerror = () => posterEl.src = 'https://placehold.co/160x240/181818/333?text=No+Image';
     }
 
     setText('detail-title',    d.title);
-    setText('detail-studio',   info.Studio   || info.studio   || '–');
-    setText('detail-season',   info.Season   || info.season   || '–');
-    setText('detail-duration', info.Duration || info.duration || '–');
-    setText('detail-type',     info.Type     || info.type     || '–');
+    setText('detail-studio',   info.Studio   || info.studio   || info['Studio'] || '–');
+    setText('detail-season',   info.Season   || info.season   || info['Musim'] || '–');
+    setText('detail-duration', info.Duration || info.duration || info['Durasi'] || '–');
+    setText('detail-type',     info.Type     || info.type     || info['Tipe'] || '–');
 
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
-        const status         = info.Status || info.status || '–';
+        const status         = info.Status || info.status || info['Status'] || '–';
         const ongoing        = status === 'Ongoing';
         statusEl.textContent = status;
         statusEl.className   = 'status-pill ' + (ongoing ? 'ongoing' : 'completed');
@@ -73,7 +84,7 @@ function renderDetail(data) {
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
         let syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
-        if (!syn || syn.toLowerCase().includes('oploverz') || syn.length < 20) {
+        if (!syn || syn.length < 10) {
             syn = 'Sinopsis belum tersedia untuk anime ini.';
         }
         synEl.textContent = syn;
@@ -108,7 +119,7 @@ function updateWatchBtn() {
     const btn = document.getElementById('btn-watch');
     if (!btn || !allEps.length) return;
     const firstEp  = allEps[0];
-    btn.onclick    = () => goWatch(firstEp.slug);
+    btn.onclick    = () => goWatch(firstEp.slug || firstEp.url);
     btn.innerHTML  = `
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
         Tonton Ep ${firstEp.num || firstEp.episode || ""}
@@ -139,10 +150,10 @@ function renderEpisodes() {
     }
 
     container.innerHTML = slice.map((ep, i) => `
-        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${ep.slug}')">
-            <div class="ep-num">Ep ${ep.num || ep.episode || ""}</div>
+        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${ep.slug || ep.url}')">
+            <div class="ep-num">Ep ${ep.num || ep.episode || (ep.label ? ep.label.replace(/.*Episode\s*/i,'') : '') || ''}</div>
             <div class="ep-info">
-                <div class="ep-title">${ep.name || ep.title || ''}</div>
+                <div class="ep-title">${ep.name || ep.title || ep.label || ''}</div>
                 <div class="ep-date">${ep.date || ep.release_date || ''}</div>
             </div>
             <div class="ep-play">
