@@ -6,6 +6,10 @@
   <title>Nonton — AniStream</title>
   <link rel="stylesheet" href="/css/main.css">
   <style>
+    /* ── NO SELECT ── */
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
     body { background: #000; }
 
     /* ── PLAYER ── */
@@ -21,77 +25,138 @@
       background:#000; z-index:5;
     }
     .player-loading .spinner {
-      width:40px; height:40px;
-      border:3px solid rgba(255,255,255,0.1);
+      width:36px; height:36px;
+      border:2.5px solid rgba(255,255,255,0.08);
       border-top-color:var(--accent2);
       border-radius:50%;
-      animation:spin 0.8s linear infinite;
+      animation:spin 0.7s linear infinite;
     }
     .player-error {
       position:absolute; inset:0;
       display:none; align-items:center; justify-content:center;
-      flex-direction:column; gap:10px; background:#000; z-index:5;
+      flex-direction:column; gap:12px; background:#000; z-index:5;
       text-align:center; padding:24px;
     }
-    .player-error p { font-size:13px; color:var(--text3); }
-    .btn-try-other {
-      padding:8px 20px; background:var(--accent); color:white;
-      border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;
+    .player-error p {
+      font-size:12px; color:var(--text3);
+      font-family:'Syne', sans-serif;
+      line-height:1.6;
     }
+    .btn-try-other {
+      padding:9px 22px; background:var(--accent); color:white;
+      border:none; border-radius:0;
+      font-family:'Syne', sans-serif;
+      font-size:11px; font-weight:800;
+      letter-spacing:0.8px; text-transform:uppercase;
+      cursor:pointer; transition:all 0.15s;
+    }
+    .btn-try-other:active { background:#1d4ed8; }
 
     /* ── EP INFO ── */
-    .ep-info-bar { background:var(--bg2); padding:12px 16px; border-bottom:1px solid var(--border); }
-    .ep-info-title { font-size:14px; font-weight:700; }
-    .ep-info-sub   { font-size:11px; color:var(--text3); margin-top:2px; }
+    .ep-info-bar {
+      background:var(--bg2);
+      padding:13px 16px;
+      border-bottom:1px solid var(--border);
+    }
+    .ep-info-title {
+      font-family:'Syne', sans-serif;
+      font-size:13px; font-weight:800;
+      line-height:1.3; letter-spacing:-0.2px;
+    }
+    .ep-info-sub {
+      font-size:10px; color:var(--text3);
+      margin-top:3px;
+      font-family:'Syne', sans-serif;
+    }
 
     /* ── SERVER TABS ── */
     .server-section { padding:14px 16px 0; }
-    .server-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-    .server-tabs { display:flex; flex-wrap:wrap; gap:8px; }
-    .server-tab {
-      padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700;
-      background:var(--bg3); border:1px solid var(--border); color:var(--text2);
-      cursor:pointer; transition:all 0.2s;
+    .server-label {
+      font-family:'Syne', sans-serif;
+      font-size:10px; font-weight:800; color:var(--text3);
+      text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;
     }
-    .server-tab.active { background:var(--accent); border-color:var(--accent); color:white; }
+    .server-tabs { display:flex; flex-wrap:wrap; gap:6px; }
+    .server-tab {
+      padding:7px 14px; border-radius:0;
+      font-family:'Syne', sans-serif;
+      font-size:11px; font-weight:700; letter-spacing:0.3px;
+      background:var(--bg3); border:1px solid var(--border); color:var(--text2);
+      cursor:pointer; transition:all 0.15s;
+    }
+    .server-tab.active {
+      background:var(--accent); border-color:var(--accent); color:white;
+    }
+    .server-tab:active { opacity:0.8; }
 
     /* ── NAV BUTTONS ── */
-    .ep-nav { display:flex; gap:10px; padding:14px 16px; }
+    .ep-nav { display:flex; gap:8px; padding:14px 16px; }
     .btn-ep-nav {
-      flex:1; padding:11px; background:var(--bg2); border:1px solid var(--border);
-      border-radius:10px; font-size:13px; font-weight:700; color:var(--text2);
-      cursor:pointer; transition:all 0.2s;
+      flex:1; padding:12px; background:var(--bg2); border:1px solid var(--border);
+      border-radius:0;
+      font-family:'Syne', sans-serif;
+      font-size:11px; font-weight:800; letter-spacing:0.3px;
+      color:var(--text2); cursor:pointer; transition:all 0.15s;
       display:flex; align-items:center; justify-content:center; gap:6px;
+      text-transform:uppercase;
     }
-    .btn-ep-nav:disabled { opacity:0.3; cursor:not-allowed; }
+    .btn-ep-nav:disabled { opacity:0.25; cursor:not-allowed; }
+    .btn-ep-nav:not(:disabled):active { background:var(--bg3); color:var(--text); }
 
     /* ── DOWNLOAD ── */
-    .dl-section { padding:0 16px 14px; }
-    .dl-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-    .dl-group { display:flex; flex-direction:column; gap:10px; }
+    .dl-section { padding:0 16px 16px; }
+    .dl-label {
+      font-family:'Syne', sans-serif;
+      font-size:10px; font-weight:800; color:var(--text3);
+      text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;
+    }
+    .dl-group { display:flex; flex-direction:column; gap:12px; }
     .dl-quality { display:flex; flex-direction:column; gap:6px; }
-    .dl-quality .dl-label { font-size:12px; font-weight:700; color:var(--text2); text-transform:none; letter-spacing:0; margin-bottom:0; }
+    .dl-quality .dl-label {
+      font-family:'Syne', sans-serif;
+      font-size:10px; font-weight:700; color:var(--text2);
+      text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0;
+    }
     .dl-links { display:flex; flex-wrap:wrap; gap:6px; }
     .btn-dl {
-      padding:6px 12px; background:var(--bg2); border:1px solid var(--border);
-      border-radius:8px; font-size:12px; font-weight:700; color:var(--text2);
-      text-decoration:none; transition:all 0.2s; display:flex; align-items:center; gap:5px;
+      padding:7px 13px; background:var(--bg2); border:1px solid var(--border);
+      border-radius:0;
+      font-family:'Syne', sans-serif;
+      font-size:10px; font-weight:700; letter-spacing:0.3px;
+      color:var(--text2); text-decoration:none;
+      transition:all 0.15s; display:flex; align-items:center; gap:5px;
     }
-    .btn-dl:active { background:var(--bg3); }
+    .btn-dl:active { background:var(--bg3); color:var(--text); }
 
     /* ── EPISODE LAINNYA ── */
     .rel-section { padding:0 16px 80px; }
-    .rel-label { font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-    .rel-list { display:flex; flex-direction:column; gap:6px; }
+    .rel-label {
+      font-family:'Syne', sans-serif;
+      font-size:10px; font-weight:800; color:var(--text3);
+      text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;
+    }
+    .rel-list { display:flex; flex-direction:column; gap:1px; }
     .rel-item {
       display:flex; align-items:center; justify-content:space-between;
-      padding:10px 14px; background:var(--bg2); border:1px solid var(--border);
-      border-radius:10px; cursor:pointer; transition:all 0.15s; font-size:13px; font-weight:600;
+      padding:12px 14px; background:var(--bg2);
+      border-bottom:1px solid var(--border);
+      border-left:2px solid transparent;
+      cursor:pointer; transition:all 0.15s;
+      font-family:'Syne', sans-serif;
+      font-size:12px; font-weight:700;
     }
-    .rel-item.active { background:var(--accent); border-color:var(--accent); color:white; }
-    .rel-item:active { opacity:0.7; }
-    .rel-item-num { font-size:12px; color:var(--text3); }
-    .rel-item.active .rel-item-num { color:rgba(255,255,255,0.7); }
+    .rel-item:first-child { border-top:1px solid var(--border); }
+    .rel-item.active {
+      background:rgba(37,99,235,0.1);
+      border-left-color:var(--accent2);
+      color:var(--accent2);
+    }
+    .rel-item:not(.active):active { background:var(--bg3); border-left-color:var(--border2); }
+    .rel-item-num {
+      font-size:10px; color:var(--text3);
+      font-family:'Syne', sans-serif; font-weight:700;
+    }
+    .rel-item.active .rel-item-num { color:var(--accent2); opacity:0.7; }
   </style>
 </head>
 <body>
@@ -109,7 +174,7 @@
   <div class="player-wrap">
     <div class="player-loading" id="player-loading"><div class="spinner"></div></div>
     <div class="player-error" id="player-error">
-      <svg width="36" height="36" fill="none" stroke="var(--text3)" stroke-width="1.5" viewBox="0 0 24 24">
+      <svg width="32" height="32" fill="none" stroke="var(--text3)" stroke-width="1.5" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
       <p>Video gagal dimuat.<br>Coba server lain.</p>
@@ -131,19 +196,19 @@
   <div class="server-section">
     <div class="server-label">Pilih Server</div>
     <div class="server-tabs" id="server-tabs">
-      <div style="font-size:12px;color:var(--text3)">Memuat server...</div>
+      <div style="font-size:11px;color:var(--text3);font-family:'Syne',sans-serif">Memuat server...</div>
     </div>
   </div>
 
   <!-- EP NAVIGATION -->
   <div class="ep-nav">
     <button class="btn-ep-nav" id="btn-prev" disabled>
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
       Sebelumnya
     </button>
     <button class="btn-ep-nav" id="btn-next" disabled>
       Selanjutnya
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
     </button>
   </div>
 
@@ -151,7 +216,7 @@
   <div class="dl-section">
     <div class="dl-label">Unduh Episode</div>
     <div class="dl-group" id="dl-group">
-      <span style="font-size:12px;color:var(--text3)">Memuat link...</span>
+      <span style="font-size:11px;color:var(--text3);font-family:'Syne',sans-serif">Memuat link...</span>
     </div>
   </div>
 
