@@ -19,7 +19,7 @@ async function doSearch(q, page = 1, append = false) {
     try {
         const data  = await fetchJSON(`/api/anime/search?q=${encodeURIComponent(q)}&page=${page}`);
         currentPage = page;
-        hasNext     = data.pagination?.hasNext || false;
+        hasNext     = data.next_page ? true : (data.total_pages ? currentPage < data.total_pages : false);
         const list  = data.anime_list || [];
         if (!append) allResults = list; else allResults = [...allResults, ...list];
         if (!allResults.length) {
