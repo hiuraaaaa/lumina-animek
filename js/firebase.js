@@ -1,6 +1,4 @@
 // ── FIREBASE CONFIG ──
-// Menggunakan CDN langsung, expose ke window global
-
 (async function() {
     const { initializeApp }          = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getAuth, onAuthStateChanged, signInWithEmailAndPassword,
@@ -30,14 +28,15 @@
         const snap = await getDoc(ref);
         if (!snap.exists()) {
             await setDoc(ref, {
-                uid:         user.uid,
-                email:       user.email,
-                displayName: user.displayName || extra.displayName || 'Anon',
-                photoURL:    user.photoURL || null,
-                createdAt:   serverTimestamp(),
-                watchlist:   [],
+                uid:          user.uid,
+                email:        user.email,
+                displayName:  user.displayName || extra.displayName || 'Anon',
+                photoURL:     user.photoURL || null,
+                createdAt:    serverTimestamp(),
+                watchlist:    [],
                 watchedCount: 0,
-                bio:         '',
+                watchHistory: [],
+                bio:          '',
             });
         }
         return (await getDoc(ref)).data();
@@ -50,6 +49,35 @@
 
     async function updateUserProfile(uid, data) {
         await updateDoc(doc(db, 'users', uid), data);
+    }
+
+    // ── TRACK WATCHED EPISODE ──
+    async function trackWatchedEpisode(uid, episode) {
+        // episode = { slug, title, seriesName, seriesUrl }
+        try {
+            const ref  = doc(db, 'users', uid);
+            const snap = await getDoc(ref);
+            if (!snap.exists()) return;
+
+            const data        = snap.data();
+            const history     = data.watchHistory || [];
+            const alreadySeen = history.some(h => h.slug === episode.slug);
+
+            // Update timestamp kalau sudah ada, tambah baru kalau belum
+            const newHistory = alreadySeen
+                ? history.map(h => h.slug === episode.slug
+                    ? { ...h, watchedAt: Date.now() }
+                    : h)
+                : [{ ...episode, watchedAt: Date.now() }, ...history].slice(0, 200);
+
+            const watchedCount = alreadySeen
+                ? (data.watchedCount || 0)
+                : (data.watchedCount || 0) + 1;
+
+            await updateDoc(ref, { watchHistory: newHistory, watchedCount });
+        } catch(e) {
+            console.warn('trackWatchedEpisode error:', e.message);
+        }
     }
 
     function friendlyError(code) {
@@ -67,7 +95,6 @@
         return map[code] || 'Terjadi kesalahan, coba lagi';
     }
 
-    // Expose ke window global
     window.FB = {
         auth, db, googleProvider,
         onAuthStateChanged,
@@ -79,10 +106,10 @@
         createUserProfile,
         getUserProfile,
         updateUserProfile,
+        trackWatchedEpisode,
         friendlyError,
         doc, setDoc, getDoc, updateDoc, serverTimestamp,
     };
 
-    // Dispatch event supaya halaman tahu Firebase udah siap
     window.dispatchEvent(new Event('firebase-ready'));
 })();
