@@ -61,7 +61,6 @@ function renderGrid(gridId, items) {
             </svg><h3>Tidak ada anime</h3></div>`;
         return;
     }
-    // Potong ke kelipatan 3 biar grid rapi
     const trimmed = items.slice(0, Math.floor(items.length / 3) * 3);
     grid.innerHTML = (trimmed.length ? trimmed : items).map((a, i) => renderCard(a, i)).join('');
 }
@@ -73,8 +72,6 @@ async function loadHome() {
 
     const ongoingGrid  = document.getElementById('ongoing-grid');
     const completeGrid = document.getElementById('complete-grid');
-    if (ongoingGrid)  ongoingGrid.innerHTML  = renderSkeleton(6);
-    if (completeGrid) completeGrid.innerHTML = renderSkeleton(6);
 
     try {
         const data     = await fetchJSON('/api/anime/home');
@@ -86,7 +83,6 @@ async function loadHome() {
         const ongoingItems  = ongoingSection?.items  || [];
         const completeItems = completeSection?.items || [];
 
-        // Hero dari ongoing dulu, fallback ke semua
         const heroSource = ongoingItems.length ? ongoingItems : sections.flatMap(s => s.items || []);
         renderHero(heroSource);
 
@@ -103,6 +99,7 @@ async function loadHome() {
         showToast('Gagal memuat. Cek koneksi kamu.');
     } finally {
         isLoading = false;
+        window.hideSplash?.();
     }
 }
 
