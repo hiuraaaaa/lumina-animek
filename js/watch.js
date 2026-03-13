@@ -1,11 +1,12 @@
 // ── WATCH PAGE ──
 
-const params   = new URLSearchParams(window.location.search);
-const EP_SLUG  = params.get('slug') || '';
+const params    = new URLSearchParams(window.location.search);
+const EP_SLUG   = params.get('slug') || '';
 const BACK_SLUG = params.get('anime') || '';
 
 let servers    = [];
 let currentIdx = 0;
+let epNav      = { prev: null, next: null };
 
 async function init() {
     if (!EP_SLUG) { window.location.href = '/'; return; }
@@ -14,27 +15,28 @@ async function init() {
         const data = await res.json();
         if (!data.status) throw new Error(data.message || 'Gagal');
 
-        // Support format baru: data.result
         const ep = data.result || data;
 
         document.title = (ep.title || 'Nonton') + ' — AniStream';
         document.getElementById('ep-title').textContent = ep.title || 'Episode';
         document.getElementById('ep-sub').textContent   = ep.series?.name || (BACK_SLUG ? decodeURIComponent(BACK_SLUG).replace(/-/g,' ') : '');
 
-        // Mirrors → servers. Tambah stream utama juga
+        // Mirrors → servers
         const mirrorServers = (ep.mirrors || []).map(m => ({ name: m.label, url: m.url }));
         if (ep.stream && !mirrorServers.length) mirrorServers.unshift({ name: 'Server 1', url: ep.stream });
         servers = mirrorServers;
         renderServers();
-
         if (servers.length) playServer(0);
 
         renderDownloads(ep.downloads || []);
 
-        // Back to detail
-        const animeSlug = EP_SLUG.replace(/-episode-.*/i,'').replace(/-subtitle-.*/i,'').replace(/-sub-indo.*/i,'');
-        const btnBack = document.getElementById('btn-back');
-        if (btnBack) btnBack.onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
+        // Nav prev/next
+        epNav.prev = ep.nav?.prev || null;
+        epNav.next = ep.nav?.next || null;
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        if (epNav.prev) btnPrev.disabled = false;
+        if (epNav.next) btnNext.disabled = false;
 
     } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
@@ -63,16 +65,43 @@ function toProxyUrl(url) {
     return url;
 }
 
+function isBloggerUrl(url) {
+    return /blogger\.com\/video\.g/i.test(url);
+}
+
 window.playServer = function(idx) {
     if (idx < 0 || idx >= servers.length) return;
     currentIdx = idx;
-    const s      = servers[idx];
-    const iframe = document.getElementById('iframe-player');
+    const s       = servers[idx];
+    const iframe  = document.getElementById('iframe-player');
+    const video   = document.getElementById('video-player');
 
     document.querySelectorAll('.server-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
     showLoading();
 
-    iframe.src = toProxyUrl(s.url);
+    // Blogger → pakai iframe langsung (tanpa proxy)
+    if (isBloggerUrl(s.url)) {
+        video.style.display  = 'none';
+        video.src            = '';
+        iframe.style.display = 'block';
+        iframe.src           = s.url;
+    }
+    // URL .m3u8 atau .mp4 → pakai video tag
+    else if (/\.(mp4|m3u8|webm)(\?|$)/i.test(s.url)) {
+        iframe.style.display = 'none';
+        iframe.src           = '';
+        video.style.display  = 'block';
+        video.src            = s.url;
+        video.load();
+        video.play().catch(() => {});
+    }
+    // URL lain (embed) → iframe
+    else {
+        video.style.display  = 'none';
+        video.src            = '';
+        iframe.style.display = 'block';
+        iframe.src           = s.url;
+    }
 };
 
 window.tryNextServer = function() {
@@ -83,11 +112,39 @@ window.tryNextServer = function() {
 
 window.hideLoading = function() {
     document.getElementById('player-loading').style.display = 'none';
+    document.getElementById('player-error').style.display   = 'none';
+};
+
+window.onVideoError = function() {
+    document.getElementById('player-loading').style.display = 'none';
+    document.getElementById('player-error').style.display   = 'flex';
+};
+
+window.goPrev = function() {
+    if (epNav.prev) {
+        const slug = epNav.prev.replace('https://oploverz.ch/', '').replace(/\/$/, '');
+        window.location.href = '/watch?slug=' + slug;
+    }
+};
+
+window.goNext = function() {
+    if (epNav.next) {
+        const slug = epNav.next.replace('https://oploverz.ch/', '').replace(/\/$/, '');
+        window.location.href = '/watch?slug=' + slug;
+    }
 };
 
 function showLoading() {
     document.getElementById('player-loading').style.display = 'flex';
     document.getElementById('player-error').style.display   = 'none';
+}
+
+// Blogger iframe: hide loading setelah beberapa detik karena onload sering tidak fire
+function bloggerLoadTimeout() {
+    setTimeout(() => {
+        const loading = document.getElementById('player-loading');
+        if (loading && loading.style.display !== 'none') hideLoading();
+    }, 4000);
 }
 
 function renderDownloads(downloads) {
@@ -96,30 +153,24 @@ function renderDownloads(downloads) {
         wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada link download</span>';
         return;
     }
-    // Group by resolution
-    const grouped = {};
-    downloads.forEach(d => {
-        const res = d.resolution || 'Unknown';
-        if (!grouped[res]) grouped[res] = [];
-        grouped[res].push(d);
-    });
-    wrap.innerHTML = Object.entries(grouped).map(([res, links]) => `
-        <div style="width:100%">
-            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:700">${res}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-                ${links.map(l => `
-                    <a href="${l.url}" target="_blank" class="btn-dl">
-                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7,10 12,15 17,10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        ${l.name || 'Download'}
-                    </a>
-                `).join('')}
-            </div>
-        </div>
+    wrap.innerHTML = downloads.map(d => `
+        <a href="${d.url}" target="_blank" rel="noopener noreferrer" class="btn-dl">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ${d.label || 'Download'}
+        </a>
     `).join('');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 init();
