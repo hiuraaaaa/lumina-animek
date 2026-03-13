@@ -144,6 +144,11 @@
 
   <script>
     (function() {
+      if (sessionStorage.getItem('splash_shown')) {
+        document.getElementById('splash')?.remove();
+        return;
+      }
+      sessionStorage.setItem('splash_shown', '1');
       document.body.style.overflow = 'hidden';
       window.hideSplash = function() {
         const splash = document.getElementById('splash');
