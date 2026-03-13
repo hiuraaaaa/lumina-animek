@@ -284,4 +284,35 @@ router.get('/watch/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+
+// Proxy Blogger video — bypass CORS
+router.get('/proxy/blogger', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) return res.status(400).json({ status: false, message: 'Token required' });
+
+        const url = `https://www.blogger.com/video.g?token=${encodeURIComponent(token)}`;
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Referer': 'https://oploverz.ch/',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            },
+            responseType: 'stream',
+            timeout: 30000,
+            maxRedirects: 10,
+        });
+
+        // Forward headers
+        res.setHeader('Content-Type', response.headers['content-type'] || 'text/html');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        if (response.headers['content-length']) {
+            res.setHeader('Content-Length', response.headers['content-length']);
+        }
+        response.data.pipe(res);
+    } catch (e) {
+        res.status(500).json({ status: false, message: e.message });
+    }
+});
+
 module.exports = router;
