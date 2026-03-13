@@ -21,9 +21,15 @@ async function init() {
         document.getElementById('ep-title').textContent = ep.title || 'Episode';
         document.getElementById('ep-sub').textContent   = ep.series?.name || '';
 
-        // Build server list dari mirrors otakudesu
-        // mirrors: { '360p': [{name, id, i, q}], '480p': [...], '720p': [...] }
+        // Build server list — default_embed dulu, lalu mirrors
         servers = [];
+
+        // default_embed sebagai server pertama
+        if (ep.default_embed) {
+            servers.push({ name: 'Default', url: ep.default_embed, type: 'embed' });
+        }
+
+        // Mirror servers
         const qualities = ['720p', '480p', '360p'];
         for (const q of qualities) {
             const list = ep.mirrors?.[q] || [];
@@ -31,10 +37,6 @@ async function init() {
                 const m = list[i];
                 servers.push({ name: `${m.name} ${q}`, id: m.id, i: String(i), q, type: 'mirror' });
             }
-        }
-        // Fallback: default_embed
-        if (!servers.length && ep.default_embed) {
-            servers.push({ name: 'Server 1', url: ep.default_embed, type: 'embed' });
         }
 
         renderServers();
