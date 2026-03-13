@@ -36,7 +36,8 @@ async function init() {
         if (epNav.prev) document.getElementById('btn-prev').disabled = false;
         if (epNav.next) document.getElementById('btn-next').disabled = false;
 
-        // Recommended
+        // Related & Recommended
+        renderRelated(ep.related || []);
         renderRecommended(ep.recommended || []);
 
     } catch(e) {
@@ -79,10 +80,7 @@ window.playServer = function(idx) {
         video.style.display  = 'none'; video.src = '';
         iframe.style.display = 'block';
         iframe.src = s.url;
-        // Blogger iframe sering tidak fire onload, hide loading otomatis
-        if (/blogger\.com/i.test(s.url)) {
-            setTimeout(() => hideLoading(), 4000);
-        }
+        if (/blogger\.com/i.test(s.url)) setTimeout(() => hideLoading(), 4000);
     }
 };
 
@@ -134,6 +132,20 @@ function renderDownloads(downloads) {
             </svg>
             ${d.label || 'Download'}
         </a>
+    `).join('');
+}
+
+function renderRelated(list) {
+    if (!list.length) return;
+    const section = document.getElementById('rel-section');
+    const wrap    = document.getElementById('rel-list');
+    section.style.display = 'block';
+    wrap.innerHTML = list.map(item => `
+        <div class="rec-card" onclick="window.location.href='/watch?slug=${item.slug}'">
+            <img src="${item.image || ''}" alt="${item.title || ''}" loading="lazy"
+                 onerror="this.style.background='var(--bg3)'">
+            <div class="rec-card-title">${item.title || ''}</div>
+        </div>
     `).join('');
 }
 
