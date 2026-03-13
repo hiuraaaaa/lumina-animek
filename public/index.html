@@ -75,10 +75,11 @@
     <!-- Filter Chips -->
     <div class="filter-chips">
       <button class="chip active" data-filter="all">Semua</button>
+      <button class="chip" data-filter="ongoing">On-going</button>
+      <button class="chip" data-filter="complete">Complete</button>
       <button class="chip" data-filter="TV">TV</button>
       <button class="chip" data-filter="Movie">Movie</button>
       <button class="chip" data-filter="Special">Special</button>
-      <button class="chip" data-filter="Live Action">Live Action</button>
       <button class="chip" data-filter="OVA">OVA</button>
     </div>
 
@@ -121,11 +122,10 @@
 
   <div id="toast" class="toast"></div>
 
-  <script src="/js/utils.js"></script>
+  <!-- FIX: hapus duplikat utils.js, urutan load benar -->
   <script src="/js/utils.js"></script>
   <script src="/js/home.js"></script>
-
   <script src="/js/lazyload.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => window.lazyLoad.watchGrid("anime-grid"));</script>
+  <script>document.addEventListener("DOMContentLoaded", () => window.lazyLoad?.watchGrid("anime-grid"));</script>
 </body>
 </html>
