@@ -201,7 +201,37 @@ function parseDetail($) {
     });
 
     const episodes = episode_sections.flatMap(s => s.episodes).reverse();
-    return { title, cover, poster: cover, synopsis, info, genres, episode_sections, episodes, total_episodes: episodes.length };
+
+    // Filter info: buang nilai kosong, Unknown, atau tanda tanya
+    const SKIP_VALS = ['unknown', '?', '-', ''];
+    for (const key of Object.keys(info)) {
+        if (SKIP_VALS.includes((info[key] || '').toLowerCase().trim())) delete info[key];
+    }
+
+    // Rekomendasi — coba beberapa selector umum otakudesu
+    const recommendations = [];
+    const recSelectors = [
+        '#recommend-anime-series .isi-konten',
+        '.rekomendasi .isi-konten',
+        '.animerekomen .isi-konten',
+        '#recommend-anime-series li'
+    ];
+    for (const sel of recSelectors) {
+        const els = $(sel);
+        if (els.length) {
+            els.each((_, item) => {
+                const el   = $(item);
+                const a    = el.find('a').first();
+                const img  = el.find('img').first().attr('src') || null;
+                const href = a.attr('href') || '';
+                const name = a.attr('title') || el.find('.judul-anime, .col-anime-title, h2').first().text().trim() || a.text().trim();
+                if (href && name) recommendations.push({ title: name, url: href, cover: img });
+            });
+            if (recommendations.length) break;
+        }
+    }
+
+    return { title, cover, poster: cover, synopsis, info, genres, episode_sections, episodes, total_episodes: episodes.length, recommendations };
 }
 
 // ── EPISODE STREAM ────────────────────────────────────────
