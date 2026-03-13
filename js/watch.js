@@ -80,7 +80,8 @@ window.playServer = function(idx) {
         video.style.display  = 'none'; video.src = '';
         iframe.style.display = 'block';
         iframe.src = s.url;
-        if (/blogger\.com/i.test(s.url)) setTimeout(() => hideLoading(), 4000);
+        // Selalu hide loading setelah 5 detik untuk iframe (onload tidak reliable)
+        setTimeout(() => hideLoading(), 5000);
     }
 };
 
