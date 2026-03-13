@@ -7,7 +7,6 @@ let   epPage      = 1;
 const EP_PER_PAGE = 50;
 let   allEps      = [];
 
-// ── SLUG HELPER ──
 function toAnimeSlug(slug) {
     return slug.replace(/-episode-.*/i, '')
                .replace(/-subtitle-.*/i, '')
@@ -19,21 +18,17 @@ function toAnimeSlug(slug) {
 
 const ANIME_SLUG = toAnimeSlug(RAW_SLUG);
 
-// ── ESCAPE HTML ──
 function esc(str) {
     return (str || '').toString()
         .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
         .replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── STRIP PREFIX ──
-// Scraper kadang return "Studio: Passione" → strip jadi "Passione"
 function cleanVal(label, val) {
     if (!val) return '';
     return val.toString().replace(new RegExp('^' + label + '\\s*:\\s*', 'i'), '').trim();
 }
 
-// ── FETCH ──
 async function fetchDetail(slug) {
     const urlParam = new URLSearchParams(window.location.search).get('url');
     const apiUrl   = urlParam
@@ -46,18 +41,15 @@ async function fetchDetail(slug) {
     return data;
 }
 
-// ── RENDER ──
 function renderDetail(data) {
     const d    = data.detail;
     const info = d.info || {};
 
     document.title = `${d.title} — AniStream`;
 
-    // Hero bg
     const heroBg = document.getElementById('hero-bg');
     if (heroBg) heroBg.style.backgroundImage = `url('${esc(d.cover || d.poster)}')`;
 
-    // Poster
     const posterEl = document.getElementById('detail-poster');
     if (posterEl) {
         posterEl.src     = d.cover || d.poster || '';
@@ -65,15 +57,12 @@ function renderDetail(data) {
         posterEl.onerror = () => posterEl.src = 'https://placehold.co/160x240/181818/333?text=No+Image';
     }
 
-    // Judul
     setText('detail-title', d.title);
 
-    // Judul Jepang
     const japanese = cleanVal('Japanese', info['Japanese'] || info['Judul Jepang'] || '');
     const japEl    = document.getElementById('detail-japanese');
     if (japEl) { japEl.textContent = japanese; japEl.style.display = japanese ? 'block' : 'none'; }
 
-    // Skor
     const rawScore  = info['Skor'] || info['Score'] || info['Rating'] || '';
     const score     = cleanVal('Skor', rawScore);
     const scoreWrap = document.getElementById('detail-score-wrap');
@@ -82,7 +71,6 @@ function renderDetail(data) {
         scoreWrap.style.display = 'block';
     }
 
-    // Status
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
         const rawStatus = info['Status'] || '';
@@ -92,16 +80,14 @@ function renderDetail(data) {
         statusEl.className   = 'status-pill ' + (ongoing ? 'ongoing' : 'completed');
     }
 
-    // Badges ringkas: Tipe • Total Episode
-    const tipe      = cleanVal('Tipe',          info['Tipe']          || info['Type']    || '');
-    const totalEp   = cleanVal('Total Episode', info['Total Episode'] || '') || (d.total_episodes ? String(d.total_episodes) : '');
-    const badgesEl  = document.getElementById('detail-badges');
+    const tipe     = cleanVal('Tipe',          info['Tipe']          || info['Type']    || '');
+    const totalEp  = cleanVal('Total Episode', info['Total Episode'] || '') || (d.total_episodes ? String(d.total_episodes) : '');
+    const badgesEl = document.getElementById('detail-badges');
     if (badgesEl) {
         const badges = [tipe, totalEp ? totalEp + ' Ep' : ''].filter(Boolean);
         badgesEl.innerHTML = badges.map(b => `<span class="info-badge">${esc(b)}</span>`).join('');
     }
 
-    // Synopsis
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
         const syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
@@ -110,7 +96,6 @@ function renderDetail(data) {
         if (toggleEl) toggleEl.style.display = syn.length > 150 ? 'inline-block' : 'none';
     }
 
-    // Genres
     const genresEl = document.getElementById('detail-genres');
     if (genresEl) {
         const genres = d.genres || [];
@@ -120,7 +105,6 @@ function renderDetail(data) {
         }).join('') || '<span style="color:var(--text3);font-size:13px">–</span>';
     }
 
-    // Info table lengkap
     const infoTable = document.getElementById('detail-info-table');
     if (infoTable) {
         const fields = [
@@ -143,13 +127,10 @@ function renderDetail(data) {
             .join('');
     }
 
-    // Episodes
     allEps = d.episodes || d.episode_list || [];
     epPage = 1;
     renderEpisodes();
     updateWatchBtn();
-
-    // Rekomendasi
     renderRecommendations(d.recommendations || []);
 }
 
@@ -158,7 +139,6 @@ function setText(id, val) {
     if (el) el.textContent = val || '–';
 }
 
-// ── WATCH BUTTON ──
 function updateWatchBtn() {
     const btn = document.getElementById('btn-watch');
     if (!btn) return;
@@ -174,7 +154,6 @@ function updateWatchBtn() {
     `;
 }
 
-// ── EPISODE LIST ──
 function getSortedEps() {
     const sorted = [...allEps];
     if (epSort === 'desc') sorted.reverse();
@@ -230,7 +209,6 @@ function toggleSort() {
     renderEpisodes();
 }
 
-// ── REKOMENDASI ──
 function renderRecommendations(recs) {
     const section = document.getElementById('rec-section');
     const grid    = document.getElementById('rec-grid');
@@ -264,7 +242,6 @@ function renderRecommendations(recs) {
     section.style.display = 'block';
 }
 
-// ── NAVIGATE ──
 function goWatch(slugOrUrl) {
     if (!slugOrUrl) return;
     if (slugOrUrl.startsWith('http')) {
@@ -275,17 +252,19 @@ function goWatch(slugOrUrl) {
 }
 function goSearch(q) { window.location.href = `/search?q=${encodeURIComponent(q)}`; }
 
-// ── SKELETON ──
 function showSkeleton() {
-    document.getElementById('detail-skeleton').style.display = 'block';
-    document.getElementById('detail-content').style.display  = 'none';
+    const sk = document.getElementById('detail-skeleton');
+    const ct = document.getElementById('detail-content');
+    if (sk) sk.style.display = 'block';
+    if (ct) ct.style.display = 'none';
 }
 function hideSkeleton() {
-    document.getElementById('detail-skeleton').style.display = 'none';
-    document.getElementById('detail-content').style.display  = 'block';
+    const sk = document.getElementById('detail-skeleton');
+    const ct = document.getElementById('detail-content');
+    if (sk) sk.style.display = 'none';
+    if (ct) ct.style.display = 'block';
 }
 
-// ── INIT ──
 async function init() {
     const urlParam = new URLSearchParams(window.location.search).get('url');
     if (!RAW_SLUG && !urlParam) { window.location.href = '/'; return; }
@@ -299,7 +278,8 @@ async function init() {
         window.currentAnimeData = data.detail;
     } catch (err) {
         hideSkeleton();
-        document.getElementById('detail-content').innerHTML = `
+        const ct = document.getElementById('detail-content');
+        if (ct) ct.innerHTML = `
             <div class="empty-state" style="padding:80px 24px">
                 <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10"/>
