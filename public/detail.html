@@ -8,16 +8,12 @@
   <style>
     /* ── HERO ── */
     .detail-hero {
-      position: relative;
-      height: 200px;
-      overflow: hidden;
+      position: relative; height: 200px; overflow: hidden;
     }
     .hero-bg-blur {
       position: absolute; inset: 0;
-      background-size: cover;
-      background-position: center top;
-      filter: blur(20px) brightness(0.35);
-      transform: scale(1.1);
+      background-size: cover; background-position: center top;
+      filter: blur(20px) brightness(0.35); transform: scale(1.1);
     }
     .hero-overlay {
       position: absolute; inset: 0;
@@ -31,8 +27,7 @@
 
     /* ── DETAIL CARD ── */
     .detail-card {
-      position: relative;
-      margin: -60px 16px 0;
+      position: relative; margin: -60px 16px 0;
       display: flex; gap: 14px; z-index: 2;
     }
     .detail-poster {
@@ -42,20 +37,36 @@
       aspect-ratio: 2/3;
     }
     .detail-poster img { width: 100%; height: 100%; object-fit: cover; }
+
     .detail-meta { flex: 1; padding-top: 8px; min-width: 0; }
+
     .detail-title-text {
-      font-size: 18px; font-weight: 800;
-      line-height: 1.3; margin-bottom: 6px;
+      font-size: 17px; font-weight: 800;
+      line-height: 1.3; margin-bottom: 4px;
     }
     .detail-japanese {
       font-size: 11px; color: var(--text3);
       margin-bottom: 8px;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: none;
     }
+
+    /* ── SCORE ── */
+    .score-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(251,191,36,0.15);
+      border: 1px solid rgba(251,191,36,0.3);
+      color: #fbbf24;
+      font-size: 12px; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px;
+      margin-bottom: 6px;
+    }
+
+    /* ── STATUS ── */
     .status-pill {
       display: inline-flex; align-items: center; gap: 5px;
       font-size: 11px; font-weight: 700;
-      padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
     }
     .status-pill::before {
       content: ''; width: 6px; height: 6px;
@@ -64,32 +75,18 @@
     .status-pill.ongoing   { background: rgba(34,197,94,0.15);   color: #22c55e; }
     .status-pill.completed { background: rgba(148,163,184,0.15); color: #94a3b8; }
 
-    /* ── INFO GRID ── */
-    .detail-info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .info-item { font-size: 11px; }
-    .info-label { color: var(--text3); margin-bottom: 1px; }
-    .info-value { color: var(--text2); font-weight: 600; }
-
-    /* ── SKOR BADGE ── */
-    .score-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(251,191,36,0.15);
-      border: 1px solid rgba(251,191,36,0.3);
-      color: #fbbf24;
-      font-size: 12px; font-weight: 800;
-      padding: 3px 10px; border-radius: 20px;
-      margin-bottom: 10px;
+    /* ── INFO BADGES (Tipe • Total Ep) ── */
+    .detail-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .info-badge {
+      font-size: 11px; font-weight: 600;
+      color: var(--text2);
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      padding: 2px 10px; border-radius: 20px;
     }
 
     /* ── ACTION BUTTONS ── */
-    .detail-actions {
-      display: flex; gap: 10px;
-      padding: 16px 16px 0;
-    }
+    .detail-actions { display: flex; gap: 10px; padding: 16px 16px 0; }
     .btn-watch {
       flex: 1; display: flex; align-items: center;
       justify-content: center; gap: 8px;
@@ -102,8 +99,7 @@
     .btn-save {
       width: 46px; height: 46px;
       display: flex; align-items: center; justify-content: center;
-      background: var(--bg2);
-      border: 1px solid var(--border);
+      background: var(--bg2); border: 1px solid var(--border);
       border-radius: 10px; color: var(--text2);
       cursor: pointer; transition: all 0.2s; flex-shrink: 0;
     }
@@ -124,12 +120,9 @@
 
     /* ── SYNOPSIS ── */
     .synopsis-text {
-      font-size: 13px; color: var(--text2);
-      line-height: 1.7;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      font-size: 13px; color: var(--text2); line-height: 1.7;
+      display: -webkit-box; -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical; overflow: hidden;
     }
     .synopsis-text.expanded { -webkit-line-clamp: unset; }
     .synopsis-toggle {
@@ -151,25 +144,16 @@
       border-color: var(--accent2); color: var(--accent2);
     }
 
-    /* ── INFO LENGKAP TABLE ── */
+    /* ── INFO TABLE ── */
     .info-table { width: 100%; border-collapse: collapse; }
     .info-table tr { border-bottom: 1px solid var(--border); }
     .info-table tr:last-child { border-bottom: none; }
-    .info-table td {
-      padding: 8px 4px;
-      font-size: 12px; vertical-align: top;
-    }
-    .info-table td:first-child {
-      color: var(--text3); font-weight: 600;
-      width: 38%; padding-right: 8px;
-    }
-    .info-table td:last-child { color: var(--text2); }
+    .info-table td { padding: 8px 4px; font-size: 12px; vertical-align: top; }
+    .info-table td:first-child { color: var(--text3); font-weight: 600; width: 38%; padding-right: 8px; }
+    .info-table td:last-child  { color: var(--text2); }
 
     /* ── EPISODE LIST ── */
-    .ep-header {
-      display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 12px;
-    }
+    .ep-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     #sort-btn {
       font-size: 12px; font-weight: 600; color: var(--accent2);
       background: rgba(37,99,235,0.1);
@@ -185,17 +169,11 @@
       animation: fadeUp 0.3s ease both;
     }
     .ep-item:active { background: var(--bg3); transform: scale(0.98); }
-    .ep-num {
-      font-size: 12px; font-weight: 800;
-      color: var(--accent2); min-width: 44px; flex-shrink: 0;
-    }
+    .ep-num { font-size: 12px; font-weight: 800; color: var(--accent2); min-width: 44px; flex-shrink: 0; }
     .ep-info { flex: 1; min-width: 0; }
-    .ep-title {
-      font-size: 13px; font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .ep-date { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .ep-play { color: var(--text3); flex-shrink: 0; }
+    .ep-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ep-date  { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .ep-play  { color: var(--text3); flex-shrink: 0; }
     #ep-load-more {
       width: 100%; padding: 12px;
       background: var(--bg2); border: 1px solid var(--border);
@@ -217,16 +195,11 @@
     .sk-hero { height: 200px; background: var(--bg2); animation: pulse 1.4s ease-in-out infinite; }
     .sk-card { margin: -60px 16px 0; display: flex; gap: 14px; }
     .sk-poster {
-      width: 110px; aspect-ratio: 2/3;
-      background: var(--bg3); border-radius: 10px;
-      flex-shrink: 0; animation: pulse 1.4s ease-in-out infinite;
+      width: 110px; aspect-ratio: 2/3; background: var(--bg3);
+      border-radius: 10px; flex-shrink: 0; animation: pulse 1.4s ease-in-out infinite;
     }
     .sk-meta { flex: 1; padding-top: 8px; }
-    .sk-line {
-      height: 14px; background: var(--bg3);
-      border-radius: 4px; margin-bottom: 8px;
-      animation: pulse 1.4s ease-in-out infinite;
-    }
+    .sk-line { height: 14px; background: var(--bg3); border-radius: 4px; margin-bottom: 8px; animation: pulse 1.4s ease-in-out infinite; }
     .sk-line.title { height: 20px; width: 80%; }
     .sk-line.short { width: 50%; }
     .sk-line.xs    { height: 10px; width: 40%; }
@@ -282,29 +255,14 @@
         <div class="detail-japanese" id="detail-japanese"></div>
         <div id="detail-score-wrap" style="display:none">
           <span class="score-badge">
-            <svg width="11" height="11" fill="#fbbf24" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+            <svg width="11" height="11" fill="#fbbf24" viewBox="0 0 24 24">
+              <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+            </svg>
             <span id="detail-score">–</span>
           </span>
         </div>
-        <span class="status-pill" id="detail-status">–</span>
-        <div class="detail-info-grid">
-          <div class="info-item">
-            <div class="info-label">Studio</div>
-            <div class="info-value" id="detail-studio">–</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Tipe</div>
-            <div class="info-value" id="detail-type">–</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Season</div>
-            <div class="info-value" id="detail-season">–</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Durasi</div>
-            <div class="info-value" id="detail-duration">–</div>
-          </div>
-        </div>
+        <div><span class="status-pill" id="detail-status">–</span></div>
+        <div class="detail-badges" id="detail-badges"></div>
       </div>
     </div>
 
@@ -325,7 +283,7 @@
     <div class="detail-section">
       <div class="section-label">Sinopsis</div>
       <div class="synopsis-text" id="detail-synopsis">–</div>
-      <span class="synopsis-toggle" id="synopsis-toggle" onclick="toggleSynopsis()">Baca selengkapnya</span>
+      <span class="synopsis-toggle" id="synopsis-toggle" onclick="toggleSynopsis()" style="display:none">Baca selengkapnya</span>
     </div>
 
     <!-- GENRES -->
@@ -410,8 +368,7 @@
     function toggleSynopsis() {
       const el  = document.getElementById('detail-synopsis');
       const btn = document.getElementById('synopsis-toggle');
-      const expanded = el.classList.toggle('expanded');
-      btn.textContent = expanded ? 'Sembunyikan' : 'Baca selengkapnya';
+      btn.textContent = el.classList.toggle('expanded') ? 'Sembunyikan' : 'Baca selengkapnya';
     }
     function shareAnime() {
       if (navigator.share) {
