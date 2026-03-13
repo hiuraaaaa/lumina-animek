@@ -21,7 +21,7 @@ async function init() {
         document.getElementById('ep-title').textContent = ep.title || 'Episode';
         document.getElementById('ep-sub').textContent   = ep.series?.name || (BACK_SLUG ? decodeURIComponent(BACK_SLUG).replace(/-/g,' ') : '');
 
-        // Mirrors → servers
+        // Servers
         const mirrorServers = (ep.mirrors || []).map(m => ({ name: m.label, url: m.url }));
         if (ep.stream && !mirrorServers.length) mirrorServers.unshift({ name: 'Server 1', url: ep.stream });
         servers = mirrorServers;
@@ -30,13 +30,14 @@ async function init() {
 
         renderDownloads(ep.downloads || []);
 
-        // Nav prev/next
+        // Nav
         epNav.prev = ep.nav?.prev || null;
         epNav.next = ep.nav?.next || null;
-        const btnPrev = document.getElementById('btn-prev');
-        const btnNext = document.getElementById('btn-next');
-        if (epNav.prev) btnPrev.disabled = false;
-        if (epNav.next) btnNext.disabled = false;
+        if (epNav.prev) document.getElementById('btn-prev').disabled = false;
+        if (epNav.next) document.getElementById('btn-next').disabled = false;
+
+        // Recommended
+        renderRecommended(ep.recommended || []);
 
     } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
@@ -58,49 +59,30 @@ function renderServers() {
     `).join('');
 }
 
-function toProxyUrl(url) {
-    if (!url) return url;
-    const m = url.match(/blogger\.com\/video\.g\?token=(.+)/i);
-    if (m) return '/api/anime/proxy/blogger?token=' + encodeURIComponent(m[1]);
-    return url;
-}
-
-function isBloggerUrl(url) {
-    return /blogger\.com\/video\.g/i.test(url);
-}
-
 window.playServer = function(idx) {
     if (idx < 0 || idx >= servers.length) return;
     currentIdx = idx;
-    const s       = servers[idx];
-    const iframe  = document.getElementById('iframe-player');
-    const video   = document.getElementById('video-player');
+    const s      = servers[idx];
+    const iframe = document.getElementById('iframe-player');
+    const video  = document.getElementById('video-player');
 
     document.querySelectorAll('.server-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
     showLoading();
 
-    // Blogger → pakai iframe langsung (tanpa proxy)
-    if (isBloggerUrl(s.url)) {
-        video.style.display  = 'none';
-        video.src            = '';
-        iframe.style.display = 'block';
-        iframe.src           = s.url;
-    }
-    // URL .m3u8 atau .mp4 → pakai video tag
-    else if (/\.(mp4|m3u8|webm)(\?|$)/i.test(s.url)) {
-        iframe.style.display = 'none';
-        iframe.src           = '';
+    if (/\.(mp4|m3u8|webm)(\?|$)/i.test(s.url)) {
+        iframe.style.display = 'none'; iframe.src = '';
         video.style.display  = 'block';
-        video.src            = s.url;
+        video.src = s.url;
         video.load();
         video.play().catch(() => {});
-    }
-    // URL lain (embed) → iframe
-    else {
-        video.style.display  = 'none';
-        video.src            = '';
+    } else {
+        video.style.display  = 'none'; video.src = '';
         iframe.style.display = 'block';
-        iframe.src           = s.url;
+        iframe.src = s.url;
+        // Blogger iframe sering tidak fire onload, hide loading otomatis
+        if (/blogger\.com/i.test(s.url)) {
+            setTimeout(() => hideLoading(), 4000);
+        }
     }
 };
 
@@ -121,30 +103,20 @@ window.onVideoError = function() {
 };
 
 window.goPrev = function() {
-    if (epNav.prev) {
-        const slug = epNav.prev.replace('https://oploverz.ch/', '').replace(/\/$/, '');
-        window.location.href = '/watch?slug=' + slug;
-    }
+    if (!epNav.prev) return;
+    const slug = epNav.prev.replace('https://oploverz.ch/', '').replace(/\/$/, '');
+    window.location.href = '/watch?slug=' + slug;
 };
 
 window.goNext = function() {
-    if (epNav.next) {
-        const slug = epNav.next.replace('https://oploverz.ch/', '').replace(/\/$/, '');
-        window.location.href = '/watch?slug=' + slug;
-    }
+    if (!epNav.next) return;
+    const slug = epNav.next.replace('https://oploverz.ch/', '').replace(/\/$/, '');
+    window.location.href = '/watch?slug=' + slug;
 };
 
 function showLoading() {
     document.getElementById('player-loading').style.display = 'flex';
     document.getElementById('player-error').style.display   = 'none';
-}
-
-// Blogger iframe: hide loading setelah beberapa detik karena onload sering tidak fire
-function bloggerLoadTimeout() {
-    setTimeout(() => {
-        const loading = document.getElementById('player-loading');
-        if (loading && loading.style.display !== 'none') hideLoading();
-    }, 4000);
 }
 
 function renderDownloads(downloads) {
@@ -163,6 +135,23 @@ function renderDownloads(downloads) {
             ${d.label || 'Download'}
         </a>
     `).join('');
+}
+
+function renderRecommended(list) {
+    if (!list.length) return;
+    const section = document.getElementById('rec-section');
+    const wrap    = document.getElementById('rec-list');
+    section.style.display = 'block';
+    wrap.innerHTML = list.map(item => {
+        const slug = item.url.replace('https://oploverz.ch/series/', '').replace(/\/$/, '');
+        return `
+            <div class="rec-card" onclick="window.location.href='/detail?slug=${slug}'">
+                <img src="${item.image || ''}" alt="${item.title || ''}" loading="lazy"
+                     onerror="this.style.background='var(--bg3)'">
+                <div class="rec-card-title">${item.title || ''}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function showToast(msg) {
