@@ -228,6 +228,8 @@ router.get('/detail/:slug', async (req, res) => {
 });
 
 // Episode watch + streams — scrape oploverz.ch
+// Ganti fungsi scrapeEpisode yang lama dengan ini
+
 async function scrapeEpisode(slug) {
     const url = `${OPLOVERZ_BASE}/${slug}/`;
     const $   = await scrapePage(url);
@@ -266,8 +268,29 @@ async function scrapeEpisode(slug) {
     const next    = $('.naveps a[rel="next"]').attr('href') || null;
     const all_eps = $('.naveps a[aria-label="All Episodes"]').attr('href') || null;
 
-    return { title, date, series: { name: seriesName, url: seriesUrl, cover }, episode: episodeNum, stream, mirrors, downloads, nav: { prev, next, all_eps } };
+    // Recommended Series
+    const recommended = [];
+    $('h3').each((_, h3) => {
+        if ($(h3).text().includes('Recommended')) {
+            $(h3).closest('.bixbox').find('a[itemprop="url"]').each((_, el) => {
+                const href  = $(el).attr('href');
+                const label = $(el).attr('title') || $(el).text().trim();
+                const img   = $(el).find('img').attr('src') || null;
+                if (href && href.includes('/series/')) recommended.push({ title: label, url: href, image: img });
+            });
+        }
+    });
+
+    return {
+        title, date,
+        series: { name: seriesName, url: seriesUrl, cover },
+        episode: episodeNum,
+        stream, mirrors, downloads,
+        nav: { prev, next, all_eps },
+        recommended
+    };
 }
+
 
 router.get('/episode/:slug', async (req, res) => {
     try {
