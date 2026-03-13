@@ -15,8 +15,8 @@
     input, textarea { -webkit-user-select: text; user-select: text; }
 
     #splash {
-      position: fixed; inset: 0; z-index: 9999;
-      background: var(--bg);
+      position: fixed; inset: 0; z-index: 99999;
+      background: #080808;
       display: flex; align-items: center; justify-content: center;
       transition: opacity 0.4s ease;
     }
@@ -144,13 +144,14 @@
 
   <script>
     (function() {
+      document.body.style.overflow = 'hidden';
       window.hideSplash = function() {
         const splash = document.getElementById('splash');
         if (!splash) return;
+        document.body.style.overflow = '';
         splash.classList.add('fade-out');
         setTimeout(() => splash.remove(), 420);
       };
-      // Fallback kalau loadHome hang / error
       setTimeout(window.hideSplash, 5000);
     })();
   </script>
