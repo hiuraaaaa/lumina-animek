@@ -56,6 +56,13 @@ function renderServers() {
     `).join('');
 }
 
+function toProxyUrl(url) {
+    if (!url) return url;
+    const m = url.match(/blogger\.com\/video\.g\?token=(.+)/i);
+    if (m) return '/api/anime/proxy/blogger?token=' + encodeURIComponent(m[1]);
+    return url;
+}
+
 window.playServer = function(idx) {
     if (idx < 0 || idx >= servers.length) return;
     currentIdx = idx;
