@@ -12,7 +12,6 @@ const AJAX_HEADERS = {
     'Referer': BASE + '/'
 };
 
-// ── HELPERS ──────────────────────────────────────────────
 async function fetchPage(url) {
     if (!SCRAPER_API_KEY) throw new Error('SCRAPER_API_KEY tidak di-set');
     const apiUrl = 'http://api.scraperapi.com?api_key=' + SCRAPER_API_KEY + '&url=' + encodeURIComponent(url);
@@ -22,7 +21,6 @@ async function fetchPage(url) {
 }
 
 async function ajaxPost(params) {
-    // Nonce & embed ajax juga lewat ScraperAPI biar bypass CF
     const apiUrl = 'http://api.scraperapi.com?api_key=' + SCRAPER_API_KEY
         + '&url=' + encodeURIComponent(`${BASE}/wp-admin/admin-ajax.php`)
         + '&method=POST&keep_headers=true';
@@ -45,7 +43,7 @@ async function getNonce() {
 }
 
 async function getEmbedUrl(id, i, q, nonce) {
-    const raw = await ajaxPost({ id: String(id), i: String(i), q, nonce, action: '2a3505c93b0035d3f455df82bf976b84' });
+    const raw  = await ajaxPost({ id: String(id), i: String(i), q, nonce, action: '2a3505c93b0035d3f455df82bf976b84' });
     const data = (typeof raw === 'object') ? raw.data : (() => { try { return JSON.parse(raw).data; } catch(_) { return null; } })();
     if (!data) return null;
     const html = Buffer.from(data, 'base64').toString('utf-8');
@@ -99,7 +97,9 @@ function parseDetail($) {
         if (key === 'Genre') {
             $(p).find('a').each((_, a) => { const g = $(a).text().trim(); if (g) genres.push(g); });
         } else {
-            const val = $(p).find('span').first().text().trim();
+            // Strip prefix "Key: value" → value bersih
+            let val = $(p).find('span').first().text().trim();
+            val = val.replace(/^[^:]+:\s*/, '').trim();
             if (val) info[key] = val;
         }
     });
@@ -121,20 +121,13 @@ function parseDetail($) {
 
     const episodes = episode_sections.flatMap(s => s.episodes).reverse();
 
-    // Filter info: buang nilai kosong, Unknown, atau tanda tanya
     const SKIP_VALS = ['unknown', '?', '-', ''];
     for (const key of Object.keys(info)) {
         if (SKIP_VALS.includes((info[key] || '').toLowerCase().trim())) delete info[key];
     }
 
-    // Rekomendasi — coba beberapa selector
     const recommendations = [];
-    const recSelectors = [
-        '#recommend-anime-series .isi-konten',
-        '.rekomendasi .isi-konten',
-        '.animerekomen .isi-konten',
-        '#recommend-anime-series li'
-    ];
+    const recSelectors = ['#recommend-anime-series .isi-konten', '.rekomendasi .isi-konten', '.animerekomen .isi-konten', '#recommend-anime-series li'];
     for (const sel of recSelectors) {
         const els = $(sel);
         if (els.length) {
@@ -209,15 +202,12 @@ function parseStream($) {
     return { title, cover, series_url, next_episode, prev_episode, default_embed, mirrors, downloads, episode_list };
 }
 
-// ── ROUTES ───────────────────────────────────────────────
-
 router.get('/home', async (req, res) => {
     try {
         const $ = await fetchPage(BASE + '/');
         const days = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','Random'];
         const ongoing  = { section: 'On-going Anime', url: `${BASE}/ongoing-anime/`,  items: [] };
         const complete = { section: 'Complete Anime', url: `${BASE}/complete-anime/`, items: [] };
-
         $('.rseries .venz ul li').each((_, li) => {
             const episode = $(li).find('.epz').text().replace(/\s+/g, ' ').trim();
             const meta    = $(li).find('.epztipe').text().replace(/\s+/g, ' ').trim();
@@ -231,12 +221,10 @@ router.get('/home', async (req, res) => {
             const item = { title, url, cover, episode, meta, date, slug, poster: cover };
             days.some(d => meta.includes(d)) ? ongoing.items.push(item) : complete.items.push(item);
         });
-
         const sections   = [];
         if (ongoing.items.length)  sections.push(ongoing);
         if (complete.items.length) sections.push(complete);
-        const anime_list = sections.length ? sections[0].items : [];
-        res.json({ status: true, anime_list, sections });
+        res.json({ status: true, anime_list: sections[0]?.items || [], sections });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
@@ -378,8 +366,6 @@ router.get('/genre/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-
-// ── ANIME LIST (A-Z) ──────────────────────────────────────
 router.get('/anime-list', async (req, res) => {
     try {
         const letter = (req.query.letter || '').toUpperCase();
@@ -396,8 +382,7 @@ router.get('/anime-list', async (req, res) => {
             const url    = a.attr('href') || null;
             const title  = (a.attr('title') || a.text())
                 .replace(/ \(Episode.*?\) Subtitle Indonesia/, '')
-                .replace(/ Sub Indo$/, '')
-                .trim();
+                .replace(/ Sub Indo$/, '').trim();
             const status = $(li).find('span[style*="53eb53"]').text().trim() || null;
             const slug   = url ? url.replace(/\/$/, '').split('/').pop() : '';
             if (url && title) items.push({ title, url, slug, status: status || null });
