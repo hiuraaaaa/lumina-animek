@@ -39,6 +39,7 @@ async function init() {
         if (servers.length) playServer(0);
 
         renderDownloads(ep.downloads || {});
+        renderEpisodeList(ep.episode_list || [], EP_SLUG);
 
         // Nav prev/next
         const btnPrev = document.getElementById('btn-prev');
@@ -199,6 +200,21 @@ function renderDownloads(downloads) {
             </div>
         </div>
     `).join('');
+}
+
+function renderEpisodeList(list, currentSlug) {
+    const section = document.getElementById('rel-section');
+    const wrap    = document.getElementById('rel-list');
+    if (!wrap || !list.length) return;
+    section.style.display = 'block';
+    wrap.innerHTML = list.map(ep => {
+        const isActive = ep.slug === currentSlug;
+        const num = ep.label.replace(/episode\s*/i, 'Ep ');
+        return `<div class="rel-item${isActive ? ' active' : ''}" onclick="${isActive ? '' : `window.location.href='/watch?slug=${ep.slug}'`}">
+            <span>${num}</span>
+            ${isActive ? '<span style="font-size:11px;opacity:0.8">▶ Sedang diputar</span>' : '<span class="rel-item-num">▶</span>'}
+        </div>`;
+    }).join('');
 }
 
 function showToast(msg) {
