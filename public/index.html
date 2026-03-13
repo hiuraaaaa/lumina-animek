@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>AniStream — Nonton Anime Sub Indo</title>
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    /* ── NO SELECT ── */
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+  </style>
 </head>
 <body>
 
@@ -33,8 +38,9 @@
   <!-- ANNOUNCEMENT -->
   <div class="announcement" id="announcement">
     <div class="announcement-icon">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </div>
     <div class="announcement-body">
@@ -54,27 +60,27 @@
   <!-- SEARCH BAR -->
   <div class="search-wrap">
     <div class="search-bar">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input type="text" id="search-input" placeholder="Cari anime favorit kamu...">
+      <input type="text" id="search-input" placeholder="Cari anime..." autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
   </div>
 
   <!-- ON-GOING -->
   <section class="section">
     <div class="section-header">
-      <div class="section-title">On-going Anime</div>
-      <a href="/ongoing" class="section-more">Lihat Semua →</a>
+      <div class="section-title">On-Going</div>
+      <a href="/ongoing" class="section-more">Lihat Semua</a>
     </div>
     <div id="ongoing-grid" class="anime-grid"></div>
   </section>
 
   <!-- COMPLETE -->
-  <section class="section">
+  <section class="section" style="margin-top:24px">
     <div class="section-header">
-      <div class="section-title">Complete Anime</div>
-      <a href="/complete" class="section-more">Lihat Semua →</a>
+      <div class="section-title">Complete</div>
+      <a href="/complete" class="section-more">Lihat Semua</a>
     </div>
     <div id="complete-grid" class="anime-grid"></div>
   </section>
@@ -108,6 +114,10 @@
   <script src="/js/utils.js"></script>
   <script src="/js/home.js"></script>
   <script src="/js/lazyload.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => window.lazyLoad?.watchGrid("ongoing-grid"));</script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      window.lazyLoad?.watchGrid("ongoing-grid");
+    });
+  </script>
 </body>
 </html>
