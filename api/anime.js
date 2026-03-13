@@ -119,13 +119,6 @@ function parseDetail($) {
         if (episodes.length) episode_sections.push({ section: sTitle, episodes });
     });
 
-    const recommendations = [];
-    $('#recommend-anime-series .isi-konten').each((_, item) => {
-        const a   = $(item).find('.judul-anime a').first();
-        const img = $(item).find('img').first().attr('src') || null;
-        if (a.attr('href')) recommendations.push({ title: a.text().trim(), url: a.attr('href'), cover: img });
-    });
-
     const episodes = episode_sections.flatMap(s => s.episodes).reverse();
 
     // Filter info: buang nilai kosong, Unknown, atau tanda tanya
