@@ -1,101 +1,84 @@
 // ── WATCH PAGE ──
+// Scraper: /api/anime/stream?url=...
+// Response: { status, result: { title, cover, series_url, next_episode,
+//             default_embed, mirrors{360p,480p,720p}, downloads, episode_list } }
 
 const params  = new URLSearchParams(window.location.search);
 const EP_SLUG = params.get('slug') || '';
-const EP_URL  = params.get('url')  || '';
 
 let servers    = [];
 let currentIdx = 0;
+let nextUrl    = null;
+let prevUrl    = null;
+
+// ── Slug → URL helper ──
+function slugToUrl(slug) {
+    return `https://otakudesu.blog/episode/${slug}/`;
+}
+
+// ── URL → slug helper ──
+function urlToSlug(url) {
+    return (url || '').replace(/\/$/, '').split('/').pop();
+}
 
 async function init() {
-    if (!EP_SLUG && !EP_URL) { window.location.href = '/'; return; }
-    try {
-        let apiUrl;
-        if (EP_SLUG) {
-            apiUrl = `/api/anime/episode/${EP_SLUG}`;
-        } else {
-            // Extract slug dari full URL
-            const slug = EP_URL.replace(/\/$/, '').split('/episode/')[1]?.replace(/\/$/, '') || EP_URL.replace(/\/$/, '').split('/').pop();
-            apiUrl = `/api/anime/episode/${slug}`;
-        }
+    if (!EP_SLUG) { window.location.href = '/'; return; }
 
-        const res  = await fetch(apiUrl);
+    try {
+        const epFullUrl = slugToUrl(EP_SLUG);
+        const res  = await fetch(`/api/anime/stream?url=${encodeURIComponent(epFullUrl)}`);
         const data = await res.json();
-        if (!data.status) throw new Error(data.message || 'Gagal memuat episode');
+        if (!data.status) throw new Error(data.error || 'Gagal memuat episode');
 
         const ep = data.result;
 
         document.title = (ep.title || 'Nonton') + ' — AniStream';
-        document.getElementById('ep-title').textContent = ep.title || 'Episode';
+        setText('ep-title', ep.title || 'Episode');
 
         // Series name dari series_url
-        if (ep.series_url) {
-            const seriesSlug = ep.series_url.replace(/\/$/, '').split('/').pop();
-            // Format slug jadi judul: "one-piece" → "One Piece"
+        const subEl = document.getElementById('ep-sub');
+        if (subEl && ep.series_url) {
+            const seriesSlug = urlToSlug(ep.series_url);
             const seriesName = seriesSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            const subEl = document.getElementById('ep-sub');
-            if (subEl) {
-                subEl.textContent = seriesName;
-                subEl.onclick     = () => window.location.href = `/detail?slug=${seriesSlug}`;
-                subEl.style.cursor = 'pointer';
-            }
+            subEl.textContent  = seriesName;
+            subEl.onclick      = () => window.location.href = `/detail?slug=${urlToSlug(ep.series_url)}`;
+            subEl.style.cursor = 'pointer';
         }
 
         // ── Build server list ──
         servers = [];
 
-        // default_embed sebagai server pertama
         if (ep.default_embed) {
             servers.push({ name: 'Default', url: ep.default_embed, type: 'embed' });
         }
 
-        // Mirror servers — urutan dari kualitas tertinggi
-        const qualities = ['1080p', '720p', '480p', '360p'];
+        // mirrors dari scraper: { '360p': [{name, id, i, q}], '480p': [...], '720p': [...] }
+        const qualities = ['720p', '480p', '360p'];
         for (const q of qualities) {
             const list = ep.mirrors?.[q] || [];
-            for (let i = 0; i < list.length; i++) {
-                const m = list[i];
+            list.forEach((m, idx) => {
                 if (m.id) {
-                    servers.push({ name: `${m.name} ${q}`, id: m.id, i: String(i), q, type: 'mirror' });
+                    servers.push({ name: `${m.name} ${q}`, id: m.id, i: String(m.i ?? idx), q, type: 'mirror' });
                 } else if (m.url) {
                     servers.push({ name: `${m.name} ${q}`, url: m.url, type: 'embed' });
                 }
-            }
+            });
         }
 
         renderServers();
         if (servers.length) playServer(0);
 
-        // Downloads (termasuk batch)
         renderDownloads(ep.downloads || {});
+        renderRelated(ep.episode_list || [], epFullUrl);
 
-        // Episode list dropdown
-        renderEpisodeList(ep.episode_list || []);
+        // Prev/next — scraper hanya return next_episode, prev harus dicari dari episode_list
+        nextUrl = ep.next_episode || null;
+        prevUrl = findPrevUrl(ep.episode_list || [], epFullUrl);
 
-        // Nav buttons
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-        if (btnPrev) {
-            if (ep.prev_episode) {
-                const prevSlug = ep.prev_episode.replace(/\/$/, '').split('/').pop();
-                btnPrev.onclick  = () => window.location.href = `/watch?slug=${prevSlug}`;
-                btnPrev.disabled = false;
-            } else { btnPrev.disabled = true; }
-        }
-        if (btnNext) {
-            if (ep.next_episode) {
-                const nextSlug = ep.next_episode.replace(/\/$/, '').split('/').pop();
-                btnNext.onclick  = () => window.location.href = `/watch?slug=${nextSlug}`;
-                btnNext.disabled = false;
-            } else { btnNext.disabled = true; }
-        }
-
-        // Back to detail
-        const btnBack = document.getElementById('btn-back');
-        if (btnBack && ep.series_url) {
-            const animeSlug = ep.series_url.replace(/\/$/, '').split('/').pop();
-            btnBack.onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
-        }
+        if (btnPrev) btnPrev.disabled = !prevUrl;
+        if (btnNext) btnNext.disabled = !nextUrl;
 
     } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
@@ -104,13 +87,36 @@ async function init() {
     }
 }
 
+// Scraper tidak return prev_episode — cari dari episode_list
+function findPrevUrl(epList, currentUrl) {
+    if (!epList.length) return null;
+    const currentSlug = urlToSlug(currentUrl);
+    const idx = epList.findIndex(ep => urlToSlug(ep.url) === currentSlug);
+    // episode_list urutan DESC (terbaru duluan), jadi prev = idx + 1
+    return idx !== -1 && idx + 1 < epList.length ? epList[idx + 1].url : null;
+}
+
+// ── NAV ──
+window.goPrev = function() {
+    if (!prevUrl) return;
+    window.location.href = `/watch?slug=${urlToSlug(prevUrl)}`;
+};
+window.goNext = function() {
+    if (!nextUrl) return;
+    window.location.href = `/watch?slug=${urlToSlug(nextUrl)}`;
+};
+
 // ── SERVER TABS ──
 function renderServers() {
     const wrap = document.getElementById('server-tabs');
     if (!wrap) return;
+    if (!servers.length) {
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada server tersedia</span>';
+        return;
+    }
     wrap.innerHTML = servers.map((s, i) => `
         <div class="server-tab${i === 0 ? ' active' : ''}" id="stab-${i}" onclick="playServer(${i})">
-            ${s.name}
+            <span class="tab-name">${s.name}</span>
         </div>
     `).join('');
 }
@@ -122,59 +128,56 @@ window.playServer = async function(idx) {
 
     document.querySelectorAll('.server-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
 
-    const s      = servers[idx];
-    const iframe = document.getElementById('iframe-player');
-    if (!iframe) return;
-
-    const old = document.getElementById('blogger-btn');
-    if (old) old.remove();
+    const s       = servers[idx];
+    const iframe  = document.getElementById('iframe-player');
+    const videoEl = document.getElementById('video-player');
+    if (!iframe || !videoEl) return;
 
     showLoading();
+
+    // Reset dulu
+    iframe.src            = '';
+    iframe.style.display  = 'none';
+    videoEl.src           = '';
+    videoEl.style.display = 'none';
 
     try {
         let embedUrl = s.url || null;
 
         if (s.type === 'mirror' && s.id) {
-            // Coba filedon dulu
-            const r = await fetch(`/api/anime/filedon?id=${s.id}&i=${s.i}&q=${s.q}`);
-            const d = await r.json();
-            if (d.status && d.result?.mp4_url) {
-                // Direct MP4
-                iframe.style.display = 'none';
-                let videoEl = document.getElementById('video-player');
-                if (!videoEl) {
-                    videoEl          = document.createElement('video');
-                    videoEl.id       = 'video-player';
-                    videoEl.controls = true;
-                    videoEl.autoplay = true;
-                    videoEl.style.cssText = 'width:100%;height:100%;background:#000;';
-                    iframe.insertAdjacentElement('afterend', videoEl);
+            const isFd = s.name.toLowerCase().includes('filedon');
+
+            if (isFd) {
+                // Coba bypass filedon → MP4 direct
+                const r = await fetch(`/api/anime/filedon?id=${s.id}&i=${s.i}&q=${s.q}`);
+                const d = await r.json();
+                if (d.status && d.result?.mp4_url) {
+                    videoEl.src           = d.result.mp4_url;
+                    videoEl.style.display = 'block';
+                    videoEl.play().catch(() => {});
+                    return;
                 }
-                videoEl.src          = d.result.mp4_url;
-                videoEl.style.display = 'block';
-                document.getElementById('player-loading').style.display = 'none';
-                return;
-            } else if (d.result?.embed_url) {
-                embedUrl = d.result.embed_url;
-            } else {
-                // Fallback ke resolve
+                // Filedon gagal extract MP4, pakai embed URL-nya
+                embedUrl = d.result?.embed_url || null;
+            }
+
+            // Non-filedon atau filedon gagal → resolve embed
+            if (!embedUrl) {
                 const r2 = await fetch(`/api/anime/resolve?id=${s.id}&i=${s.i}&q=${s.q}`);
                 const d2 = await r2.json();
-                if (d2.status) embedUrl = d2.result?.embed_url;
+                embedUrl = d2.result?.embed_url || null;
             }
         }
-
-        // Sembunyiin video player kalau ada
-        const videoEl = document.getElementById('video-player');
-        if (videoEl) videoEl.style.display = 'none';
-        iframe.style.display = 'block';
 
         if (!embedUrl) {
             hideLoading();
             document.getElementById('player-error').style.display = 'flex';
             return;
         }
-        iframe.src = embedUrl;
+
+        iframe.src           = embedUrl;
+        iframe.style.display = 'block';
+
     } catch(e) {
         hideLoading();
         document.getElementById('player-error').style.display = 'flex';
@@ -183,9 +186,14 @@ window.playServer = async function(idx) {
 };
 
 window.tryNextServer = function() {
-    const next = currentIdx + 1;
-    if (next < servers.length) playServer(next);
+    if (currentIdx + 1 < servers.length) playServer(currentIdx + 1);
     else showToast('Tidak ada server lain');
+};
+
+window.onVideoError = function() {
+    document.getElementById('video-player').style.display = 'none';
+    hideLoading();
+    document.getElementById('player-error').style.display = 'flex';
 };
 
 window.hideLoading = function() {
@@ -205,30 +213,32 @@ function renderDownloads(downloads) {
 
     const entries = Object.entries(downloads);
     if (!entries.length) {
-        wrap.innerHTML = '<p style="color:var(--text3);font-size:13px">Tidak ada link download</p>';
+        wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada link download</span>';
         return;
     }
 
-    // Pisahin batch dari episode biasa
     const batchEntries   = entries.filter(([q]) => q.toLowerCase().includes('batch'));
     const regularEntries = entries.filter(([q]) => !q.toLowerCase().includes('batch'));
 
-    // Urutkan: 1080p, 720p, 480p, 360p
     const order = ['1080p', '720p', '480p', '360p'];
-    regularEntries.sort((a, b) => {
+    const sortFn = (a, b) => {
         const ai = order.findIndex(o => a[0].includes(o));
         const bi = order.findIndex(o => b[0].includes(o));
         return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    });
+    };
+    regularEntries.sort(sortFn);
 
-    const renderGroup = (label, entries) => {
-        if (!entries.length) return '';
+    const renderGroup = (label, list) => {
+        if (!list.length) return '';
         return `
-            <div class="dl-section-label">${label}</div>
-            ${entries.map(([quality, data]) => `
-                <div class="dl-quality">
-                    <span class="dl-label">${quality}${data.size ? ' · ' + data.size : ''}</span>
-                    <div class="dl-links">
+            <div style="width:100%;font-size:10px;font-weight:700;color:var(--text3);
+                text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 6px">${label}</div>
+            ${list.map(([quality, data]) => `
+                <div style="width:100%;margin-bottom:8px">
+                    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">
+                        ${quality}${data.size ? ' · ' + data.size : ''}
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px">
                         ${(data.servers || []).map(l => `
                             <a href="${l.link}" target="_blank" rel="noopener" class="btn-dl">
                                 <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -248,28 +258,38 @@ function renderDownloads(downloads) {
     wrap.innerHTML = renderGroup('Episode', regularEntries) + renderGroup('Batch', batchEntries);
 }
 
-// ── EPISODE LIST ──
-function renderEpisodeList(epList) {
-    const wrap = document.getElementById('ep-list-wrap');
-    if (!wrap || !epList.length) return;
+// ── RELATED EPISODES ──
+// episode_list: [{label, url}] — urutan DESC (terbaru duluan dari scraper)
+function renderRelated(epList, currentUrl) {
+    const section = document.getElementById('rel-section');
+    const list    = document.getElementById('rel-list');
+    if (!section || !list || !epList.length) return;
 
-    wrap.style.display = 'block';
-    const select = document.getElementById('ep-select');
-    if (!select) return;
+    const currentSlug = urlToSlug(currentUrl);
 
-    select.innerHTML = epList.map(ep => {
-        const slug = ep.slug || ep.url?.replace(/\/$/, '').split('/').pop() || '';
-        const isCurrent = EP_SLUG && slug === EP_SLUG;
-        return `<option value="${slug}" ${isCurrent ? 'selected' : ''}>${ep.label || slug}</option>`;
+    list.innerHTML = epList.map(ep => {
+        const slug  = urlToSlug(ep.url);
+        const isNow = slug === currentSlug;
+        const label = ep.label || slug;
+        return `
+        <div class="rec-card" 
+             onclick="${isNow ? '' : `window.location.href='/watch?slug=${urlToSlug(ep.url)}'`}"
+             style="${isNow ? 'border-color:var(--accent);opacity:0.6;cursor:default;' : ''}">
+            <div style="padding:10px 8px;min-height:52px;display:flex;align-items:center;justify-content:center">
+                <div class="rec-card-title" style="text-align:center">${label}</div>
+            </div>
+        </div>`;
     }).join('');
 
-    select.onchange = () => {
-        const slug = select.value;
-        if (slug) window.location.href = `/watch?slug=${slug}`;
-    };
+    section.style.display = 'block';
 }
 
-// ── TOAST ──
+// ── HELPER ──
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '';
+}
+
 function showToast(msg) {
     const t = document.getElementById('toast');
     if (!t) return;
