@@ -346,7 +346,39 @@ router.get('/genre/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// ── LIST ──────────────────────────────────────────────────
+// ── ANIME LIST (A-Z) ──────────────────────────────────────
+router.get('/anime-list', async (req, res) => {
+    try {
+        const letter = (req.query.letter || '').toUpperCase();
+        const $      = await fetchPage(`${BASE}/anime-list/`);
+
+        const alphabet = [];
+        $('a.abjtext').each((_, a) => {
+            const char = $(a).text().trim();
+            const href = $(a).attr('href') || '';
+            if (char) alphabet.push({ char, anchor: href });
+        });
+
+        let items = [];
+        $('.jdlbar ul li').each((_, li) => {
+            const a      = $(li).find('a.hodebgst').first();
+            const url    = a.attr('href') || null;
+            const title  = a.attr('title')
+                ?.replace(/ \(Episode.*?\) Subtitle Indonesia/, '')
+                .replace(/ Sub Indo$/, '')
+                .trim() || a.text().trim();
+            const status = $(li).find('span[style*="53eb53"]').text().trim() || null;
+            const slug   = url ? url.replace(/\/$/, '').split('/').pop() : '';
+            if (url && title) items.push({ title, url, slug, status: status || null });
+        });
+
+        if (letter) items = items.filter(i => i.title.toUpperCase().startsWith(letter));
+
+        res.json({ status: true, total: items.length, filter: letter || 'all', alphabet, anime_list: items });
+    } catch (e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// ── LIST (filter by genre/status) ────────────────────────
 router.get('/list', async (req, res) => {
     try {
         const { genre, status, type, page = 1 } = req.query;
