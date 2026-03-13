@@ -38,11 +38,26 @@ const BADGE_MAP = {
 };
 function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 
+// ── DAY: ekstrak hari dari meta ──
+// meta contoh: "Senin • TV", "Selasa", "Movie"
+const DAYS = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','Random'];
+function resolveDay(a) {
+    if (a.day) return a.day;
+    const meta = a.meta || '';
+    for (const d of DAYS) {
+        if (meta.includes(d)) return d;
+    }
+    return '';
+}
+
 // ── CARD ──
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
     const type      = resolveType(a);
+    const day       = resolveDay(a);
     const poster    = a.poster || a.cover || '';
+    const episode   = a.episode || '–';
+    const date      = a.date   || '';
     const completed = a.status === 'Completed' || a.episode === 'Completed';
     const cardUrl   = a.url || a.oploverz_url || '';
     let detailHref;
@@ -54,6 +69,8 @@ function renderCard(a, i) {
     } else {
         detailHref = '/detail?slug=' + toAnimeSlug(slug);
     }
+    // Baris meta bawah: "Senin • 12 Jan 2025" atau salah satunya
+    const metaLine = [day, date].filter(Boolean).join(' • ');
     return `<div class="anime-card" onclick="window.location.href='${detailHref}'">
         <div class="anime-card-poster">
             <img src="${poster}" alt="${a.title}" loading="lazy"
@@ -61,7 +78,8 @@ function renderCard(a, i) {
             <div class="anime-card-poster-overlay"></div>
             <div class="anime-card-info">
                 <div class="anime-card-title">${a.title}</div>
-                <div class="anime-card-ep">${a.episode || '–'}</div>
+                <div class="anime-card-ep">${episode}</div>
+                ${metaLine ? `<div class="anime-card-meta">${metaLine}</div>` : ''}
             </div>
             ${type ? `<span class="anime-card-badge ${badgeClass(type)}">${type}</span>` : ''}
             <span class="status-dot ${completed ? 'completed' : 'ongoing'}"></span>
