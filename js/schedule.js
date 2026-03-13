@@ -1,42 +1,29 @@
 // ── SCHEDULE PAGE ──
 
 const DAYS_ID = {
-    monday:    'Senin',
-    tuesday:   'Selasa',
-    wednesday: 'Rabu',
-    thursday:  'Kamis',
-    friday:    'Jumat',
-    saturday:  'Sabtu',
-    sunday:    'Minggu',
+    'Senin':'Senin', 'Selasa':'Selasa', 'Rabu':'Rabu', 'Kamis':'Kamis',
+    'Jumat':'Jumat', 'Sabtu':'Sabtu', 'Minggu':'Minggu'
 };
+const DAYS_ORDER = ['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'];
 
-const DAYS_ORDER = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-
-// Hari ini dalam bahasa Inggris (lowercase)
 function getTodayKey() {
-    return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
+    const idx = new Date().getDay(); // 0=Sun
+    return ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][idx];
 }
 
-// Parse episode_info → "Ep 09" atau "at 17:00 (Ep 09)"
-function parseEpInfo(info) {
-    const match = info.match(/\((\d+)\)/);
-    const ep    = match ? `Ep ${match[1]}` : '';
-    const time  = info.startsWith('at') ? info.split(' ')[1] : null;
-    return { ep, time };
-}
-
-// ════════════════════════════
-//  FETCH
-// ════════════════════════════
 async function fetchSchedule() {
     const res = await fetch('/api/anime/schedule');
     if (!res.ok) throw new Error('Gagal memuat jadwal');
     return res.json();
 }
 
-// ════════════════════════════
-//  RENDER
-// ════════════════════════════
+// Convert array dari scraper → object { Senin: [{title,url}], ... }
+function normalizeSchedule(raw) {
+    const result = {};
+    (raw || []).forEach(({ day, items }) => { if (day && items) result[day] = items; });
+    return result;
+}
+
 function renderSchedule(schedule, activeDay) {
     const container = document.getElementById('schedule-content');
     const list      = schedule[activeDay] || [];
@@ -46,115 +33,103 @@ function renderSchedule(schedule, activeDay) {
         container.innerHTML = `
             <div class="empty-state">
                 <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
                 <h3>Tidak ada jadwal</h3>
-                <p>Hari ini tidak ada anime yang tayang</p>
+                <p>Tidak ada anime yang tayang hari ini</p>
             </div>`;
         return;
     }
 
     container.innerHTML = list.map((anime, i) => {
-        const { ep, time } = parseEpInfo(anime.episode_info);
-        const isToday      = activeDay === todayKey;
+        const isToday = activeDay === todayKey;
+        const slug    = anime.url ? anime.url.replace(/\/$/, '').split('/').pop() : '';
+        const href    = anime.url && anime.url.includes('/anime/')
+            ? `/detail?slug=${slug}`
+            : `/detail?url=${encodeURIComponent(anime.url || '')}`;
         return `
-            <div class="schedule-item" style="animation-delay:${i * 50}ms" onclick="goDetail('${anime.slug}')">
-                <div class="schedule-time">
-                    ${time
-                        ? `<span class="time-badge ${isToday ? 'today' : ''}">${time}</span>`
-                        : `<span class="time-badge released">Tayang</span>`
-                    }
-                </div>
-                <div class="schedule-info">
-                    <div class="schedule-title">${anime.title}</div>
-                    ${ep ? `<div class="schedule-ep">${ep}</div>` : ''}
-                </div>
-                <div class="schedule-arrow">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <polyline points="9,18 15,12 9,6"/>
-                    </svg>
-                </div>
+        <div class="schedule-item" style="animation-delay:${i * 40}ms" onclick="window.location.href='${href}'">
+            <div class="schedule-time">
+                <span class="time-badge ${isToday ? 'today' : 'released'}">
+                    ${isToday ? 'Hari Ini' : activeDay.slice(0,3)}
+                </span>
             </div>
-        `;
+            <div class="schedule-info">
+                <div class="schedule-title">${escHtml(anime.title)}</div>
+            </div>
+            <div class="schedule-arrow">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="9,18 15,12 9,6"/>
+                </svg>
+            </div>
+        </div>`;
     }).join('');
 }
 
 function renderDayTabs(schedule, activeDay) {
     const todayKey  = getTodayKey();
     const container = document.getElementById('day-tabs');
-
     container.innerHTML = DAYS_ORDER.map(day => {
-        const count   = schedule[day]?.length || 0;
-        const isToday = day === todayKey;
+        const count    = schedule[day]?.length || 0;
+        const isToday  = day === todayKey;
         const isActive = day === activeDay;
         return `
-            <button class="day-tab ${isActive ? 'active' : ''} ${isToday ? 'today' : ''}"
-                    data-day="${day}" onclick="switchDay('${day}')">
-                <span class="day-name">${DAYS_ID[day]}</span>
-                ${count ? `<span class="day-count">${count}</span>` : ''}
-                ${isToday ? '<span class="today-dot"></span>' : ''}
-            </button>
-        `;
+        <button class="day-tab ${isActive ? 'active' : ''} ${isToday ? 'today' : ''}"
+                data-day="${day}" onclick="switchDay('${day}')">
+            <span class="day-name">${day}</span>
+            ${count ? `<span class="day-count">${count}</span>` : ''}
+            ${isToday ? '<span class="today-dot"></span>' : ''}
+        </button>`;
     }).join('');
 }
 
-// ════════════════════════════
-//  SWITCH DAY
-// ════════════════════════════
 let _schedule = null;
 
 function switchDay(day) {
     if (!_schedule) return;
     document.querySelectorAll('.day-tab').forEach(t => t.classList.toggle('active', t.dataset.day === day));
     renderSchedule(_schedule, day);
-
-    // Update header hari
-    const todayKey = getTodayKey();
-    const label    = document.getElementById('active-day-label');
-    if (label) label.textContent = day === todayKey ? `${DAYS_ID[day]} · Hari Ini` : DAYS_ID[day];
+    const label = document.getElementById('active-day-label');
+    if (label) label.textContent = day === getTodayKey() ? `${day} · Hari Ini` : day;
 }
 
-// ════════════════════════════
-//  NAVIGATE
-// ════════════════════════════
-function goDetail(slug) {
-    window.location.href = `/detail?slug=${slug}`;
+function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ════════════════════════════
-//  INIT
-// ════════════════════════════
 async function init() {
     const container = document.getElementById('schedule-content');
     const todayKey  = getTodayKey();
 
-    // Skeleton
-    container.innerHTML = Array.from({ length: 4 }, () => `
+    container.innerHTML = Array.from({ length: 5 }, () => `
         <div class="schedule-skeleton">
             <div class="sk-time"></div>
             <div class="sk-body">
                 <div class="sk-line"></div>
                 <div class="sk-line short"></div>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('');
 
     try {
         const data = await fetchSchedule();
-        _schedule  = data.schedule || {};
+        _schedule  = normalizeSchedule(data.schedule);
 
         renderDayTabs(_schedule, todayKey);
         renderSchedule(_schedule, todayKey);
 
         const label = document.getElementById('active-day-label');
-        if (label) label.textContent = `${DAYS_ID[todayKey]} · Hari Ini`;
+        if (label) label.textContent = `${todayKey} · Hari Ini`;
 
-    } catch (err) {
+    } catch(err) {
         container.innerHTML = `
             <div class="empty-state">
                 <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <h3>Gagal Memuat</h3>
                 <p>${err.message}</p>
@@ -163,4 +138,3 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
