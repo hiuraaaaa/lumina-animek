@@ -3,7 +3,7 @@ let currentPage   = 1;
 let currentFilter = 'all';
 let isLoading     = false;
 let hasNext       = false;
-let allAnime      = [];
+let allAnime      = { all: [], ongoing: [], complete: [] };
 let heroAnime     = [];
 let heroIndex     = 0;
 let heroTimer     = null;
@@ -15,16 +15,18 @@ function renderHero(list) {
     const slider = document.getElementById('hero-slides');
     const dots   = document.getElementById('hero-dot-nav');
     if (!slider || !dots) return;
-    slider.innerHTML = heroAnime.map(a => `
-        <div class="hero-slide" onclick="goDetail(${JSON.stringify(a)})">
-            <img src="${a.poster}" alt="${a.title}" loading="lazy"
+    slider.innerHTML = heroAnime.map(a => {
+        const poster = a.poster || a.cover || 'https://placehold.co/480x270/181818/333?text=No+Image';
+        return `<div class="hero-slide" onclick="goDetail(${JSON.stringify(a).replace(/'/g, '&#39;')})">
+            <img src="${poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/480x270/181818/333?text=No+Image'">
             <div class="hero-slide-overlay"></div>
             <div class="hero-slide-info">
                 <div class="hero-badge">LATEST</div>
                 <div class="hero-title">${a.title}</div>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
     dots.innerHTML = heroAnime.map((_, i) =>
         `<div class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goHero(${i})"></div>`).join('');
     updateHeroCounter();
@@ -47,14 +49,20 @@ function updateHeroCounter() {
 
 function startHeroAuto() {
     clearInterval(heroTimer);
-    heroTimer = setInterval(() => goHero((heroIndex + 1) % heroAnime.length), 4000);
+    if (heroAnime.length > 1)
+        heroTimer = setInterval(() => goHero((heroIndex + 1) % heroAnime.length), 4000);
 }
 function resetHeroAuto() { clearInterval(heroTimer); startHeroAuto(); }
 
 // ── FILTER ──
-function applyFilter(list) {
-    if (currentFilter === 'all') return list;
-    return list.filter(a => a.type?.toLowerCase() === currentFilter.toLowerCase());
+function getFilteredList() {
+    if (currentFilter === 'ongoing')  return allAnime.ongoing;
+    if (currentFilter === 'complete') return allAnime.complete;
+    if (currentFilter !== 'all') {
+        // Filter by type (TV, Movie, OVA, dll)
+        return allAnime.all.filter(a => resolveType(a).toLowerCase() === currentFilter.toLowerCase());
+    }
+    return allAnime.all;
 }
 
 function setFilter(type) {
@@ -65,7 +73,7 @@ function setFilter(type) {
 
 function renderGrid() {
     const grid     = document.getElementById('anime-grid');
-    const filtered = applyFilter(allAnime);
+    const filtered = getFilteredList();
     if (!filtered.length) {
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
             <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -87,12 +95,29 @@ async function loadPage(page = 1, append = false) {
     if (!append) grid.innerHTML = renderSkeleton();
     if (loadBtn)  loadBtn.textContent = 'Memuat...';
     try {
-        const data  = await fetchJSON(`/api/anime/home?page=${page}`);
+        const data = await fetchJSON(`/api/anime/home?page=${page}`);
         currentPage = page;
         hasNext     = data.pagination?.hasNext || false;
-        const list  = data.anime_list || [];
-        if (!append) { allAnime = list; renderHero(list); }
-        else allAnime = [...allAnime, ...list];
+
+        // Pisahin ongoing & complete dari sections
+        const sections        = data.sections || [];
+        const ongoingSection  = sections.find(s => s.section?.toLowerCase().includes('on-going') || s.section?.toLowerCase().includes('ongoing'));
+        const completeSection = sections.find(s => s.section?.toLowerCase().includes('complete'));
+        const ongoingItems    = ongoingSection?.items  || [];
+        const completeItems   = completeSection?.items || [];
+        const allItems        = sections.flatMap(s => s.items || []);
+
+        if (!append) {
+            allAnime = { all: allItems, ongoing: ongoingItems, complete: completeItems };
+            renderHero(allItems);
+        } else {
+            allAnime = {
+                all:      [...allAnime.all,      ...allItems],
+                ongoing:  [...allAnime.ongoing,  ...ongoingItems],
+                complete: [...allAnime.complete, ...completeItems]
+            };
+        }
+
         renderGrid();
         if (loadBtn) loadBtn.style.display = hasNext ? 'block' : 'none';
     } catch (err) {
@@ -130,7 +155,10 @@ function initAnnouncement() {
     const btn = document.getElementById('close-announce');
     const el  = document.getElementById('announcement');
     if (btn && el) {
-        btn.addEventListener('click', () => { el.style.display = 'none'; sessionStorage.setItem('announce_closed', '1'); });
+        btn.addEventListener('click', () => {
+            el.style.display = 'none';
+            sessionStorage.setItem('announce_closed', '1');
+        });
         if (sessionStorage.getItem('announce_closed')) el.style.display = 'none';
     }
 }
