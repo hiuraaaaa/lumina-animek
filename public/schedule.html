@@ -6,206 +6,142 @@
   <title>Jadwal Tayang — AniStream</title>
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    /* ── DAY TABS ── */
-    .day-tabs-wrap {
-      padding: 0 16px 16px;
-      overflow-x: auto;
-      scrollbar-width: none;
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { padding: 18px 18px 4px; }
+    .page-header-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800; letter-spacing: -0.3px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .page-header-title svg { flex-shrink: 0; }
+    .page-header-sub {
+      font-size: 11px; color: var(--text3);
+      margin-top: 4px; padding-left: 30px;
+      font-family: 'Syne', sans-serif; letter-spacing: 0.3px;
     }
 
-    #day-tabs {
-      display: flex;
-      gap: 8px;
-      min-width: max-content;
+    /* ── DAY TABS ── */
+    .day-tabs-wrap {
+      padding: 14px 18px 16px;
+      overflow-x: auto; scrollbar-width: none;
     }
+    #day-tabs { display: flex; gap: 6px; min-width: max-content; }
 
     .day-tab {
       position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.2s;
-      min-width: 64px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 9px 14px;
+      border-radius: 0;
+      background: var(--bg2); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.15s;
+      min-width: 62px;
     }
-
-    .day-tab.active {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .day-tab.today:not(.active) {
-      border-color: var(--accent2);
-    }
+    .day-tab.active { background: var(--accent); border-color: var(--accent); }
+    .day-tab.today:not(.active) { border-color: var(--accent2); }
+    .day-tab:active { opacity: 0.8; }
 
     .day-name {
-      font-size: 13px;
-      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 800;
+      letter-spacing: 0.3px; text-transform: uppercase;
       color: var(--text2);
     }
     .day-tab.active .day-name { color: white; }
     .day-tab.today:not(.active) .day-name { color: var(--accent2); }
 
     .day-count {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text3);
-      background: var(--bg3);
-      padding: 1px 6px;
-      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 700;
+      color: var(--text3); background: var(--bg3);
+      padding: 1px 6px; border-radius: 0;
     }
     .day-tab.active .day-count { background: rgba(255,255,255,0.2); color: white; }
 
     .today-dot {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
+      position: absolute; top: 5px; right: 5px;
+      width: 4px; height: 4px; border-radius: 50%;
       background: #22c55e;
     }
     .day-tab.active .today-dot { background: white; }
 
-    /* ── SECTION HEADER ── */
-    .schedule-header {
-      padding: 16px 16px 8px;
-    }
-
+    /* ── SCHEDULE HEADER ── */
+    .schedule-header { padding: 0 18px 12px; }
     .schedule-day-title {
-      font-size: 18px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 800;
+      letter-spacing: -0.2px; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
     }
-
     .schedule-day-title::before {
-      content: '';
-      display: block;
-      width: 3px;
-      height: 20px;
-      background: var(--accent2);
-      border-radius: 2px;
+      content: ''; display: block;
+      width: 3px; height: 16px;
+      background: var(--accent2); border-radius: 0;
     }
-
     .schedule-count-label {
-      font-size: 12px;
-      color: var(--text3);
-      margin-top: 4px;
-      padding-left: 11px;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; color: var(--text3);
+      margin-top: 4px; padding-left: 11px;
+      letter-spacing: 0.5px;
     }
 
     /* ── SCHEDULE LIST ── */
     #schedule-content {
-      padding: 0 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 0 18px;
+      display: flex; flex-direction: column;
+      gap: 1px;
     }
 
     .schedule-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: flex; align-items: center; gap: 14px;
       background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
+      border-bottom: 1px solid var(--border);
+      border-left: 2px solid transparent;
+      padding: 13px 14px;
+      cursor: pointer; transition: all 0.15s;
       animation: fadeUp 0.3s ease both;
+      -webkit-tap-highlight-color: transparent;
     }
+    .schedule-item:first-child { border-top: 1px solid var(--border); }
+    .schedule-item:active { background: var(--bg3); border-left-color: var(--accent2); }
 
-    .schedule-item:active {
-      background: var(--bg3);
-      transform: scale(0.98);
-    }
-
-    .schedule-time {
-      flex-shrink: 0;
-      width: 60px;
-      text-align: center;
-    }
-
+    .schedule-time { flex-shrink: 0; width: 56px; text-align: center; }
     .time-badge {
       display: inline-block;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
-      background: var(--bg3);
-      color: var(--text2);
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+      padding: 3px 7px; border-radius: 0;
+      background: var(--bg3); color: var(--text2);
     }
+    .time-badge.today   { background: rgba(37,99,235,0.15); color: var(--accent2); }
+    .time-badge.released { background: rgba(34,197,94,0.12); color: #22c55e; }
 
-    .time-badge.today {
-      background: rgba(37,99,235,0.2);
-      color: var(--accent2);
-    }
-
-    .time-badge.released {
-      background: rgba(34,197,94,0.15);
-      color: #22c55e;
-    }
-
-    .schedule-info {
-      flex: 1;
-      min-width: 0;
-    }
-
+    .schedule-info { flex: 1; min-width: 0; }
     .schedule-title {
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.4;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      line-height: 1.35; letter-spacing: -0.1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-
     .schedule-ep {
-      font-size: 12px;
-      color: var(--text3);
-      margin-top: 2px;
+      font-size: 10px; color: var(--text3);
+      margin-top: 3px;
+      font-family: 'Syne', sans-serif; letter-spacing: 0.3px;
     }
-
-    .schedule-arrow {
-      color: var(--text3);
-      flex-shrink: 0;
-    }
+    .schedule-arrow { color: var(--text3); flex-shrink: 0; }
 
     /* ── SKELETON ── */
     .schedule-skeleton {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--bg2);
-      border-radius: 12px;
-      padding: 14px;
+      display: flex; align-items: center; gap: 14px;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 13px 14px;
       animation: pulse 1.4s ease-in-out infinite;
     }
-
-    .sk-time {
-      width: 52px;
-      height: 28px;
-      background: var(--bg3);
-      border-radius: 6px;
-      flex-shrink: 0;
-    }
-
+    .sk-time { width: 48px; height: 24px; background: var(--bg3); border-radius: 0; flex-shrink: 0; }
     .sk-body { flex: 1; }
-
-    .sk-line {
-      height: 12px;
-      background: var(--bg3);
-      border-radius: 4px;
-      margin-bottom: 6px;
-    }
-
+    .sk-line { height: 11px; background: var(--bg3); border-radius: 0; margin-bottom: 6px; }
     .sk-line.short { width: 40%; margin-bottom: 0; }
   </style>
 </head>
@@ -223,23 +159,23 @@
     </div>
   </nav>
 
-  <!-- PAGE TITLE -->
-  <div style="padding: 16px 16px 8px; display:flex; align-items:center; gap:10px;">
-    <svg width="20" height="20" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
-      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-      <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-    <span style="font-size:18px; font-weight:800;">Jadwal Tayang</span>
-  </div>
-  <div style="padding: 0 16px 16px; font-size:12px; color:var(--text3);">
-    Jadwal rilis anime subtitle Indonesia
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-title">
+      <svg width="18" height="18" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Jadwal Tayang
+    </div>
+    <div class="page-header-sub">Jadwal rilis anime subtitle Indonesia</div>
   </div>
 
   <!-- DAY TABS -->
   <div class="day-tabs-wrap">
-    <div id="day-tabs">
-      <!-- Diisi JS -->
-    </div>
+    <div id="day-tabs"></div>
   </div>
 
   <!-- ACTIVE DAY HEADER -->
@@ -250,42 +186,35 @@
   </div>
 
   <!-- SCHEDULE LIST -->
-  <div id="schedule-content">
-    <!-- Diisi JS -->
-  </div>
+  <div id="schedule-content"></div>
 
-  <!-- BOTTOM SPACING -->
-  <div style="height: 24px;"></div>
+  <div style="height:24px"></div>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
-    <div class="nav-item" id="nav-home" onclick="window.location.href='/'">
+    <div class="nav-item" onclick="window.location.href='/'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <span>Beranda</span>
     </div>
-    <div class="nav-item" id="nav-genre" onclick="window.location.href='/genre'">
+    <div class="nav-item" onclick="window.location.href='/genre'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       <span>Genre</span>
     </div>
-    <div class="nav-item active" id="nav-schedule" onclick="window.location.href='/schedule'">
+    <div class="nav-item active" onclick="window.location.href='/schedule'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Jadwal</span>
     </div>
-    <div class="nav-item" id="nav-watchlist" onclick="window.location.href='/watchlist'">
+    <div class="nav-item" onclick="window.location.href='/watchlist'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
       <span>Tersimpan</span>
     </div>
-    <div class="nav-item" id="nav-profile" onclick="window.location.href='/profile'">
+    <div class="nav-item" onclick="window.location.href='/profile'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Profil</span>
     </div>
   </nav>
-  <script>
-    document.getElementById('nav-schedule')?.classList.add('active');
-  </script>
 
   <div id="toast" class="toast"></div>
-  <script src="/js/utils.js"></script>
   <script src="/js/utils.js"></script>
   <script src="/js/schedule.js"></script>
 </body>
