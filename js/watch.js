@@ -5,6 +5,7 @@ const EP_SLUG = params.get('slug') || '';
 
 let servers    = [];
 let currentIdx = 0;
+let _epData    = null; // simpan data episode untuk tracking
 
 async function init() {
     if (!EP_SLUG) { window.location.href = '/'; return; }
@@ -14,6 +15,7 @@ async function init() {
         if (!data.status) throw new Error(data.message || 'Gagal memuat episode');
 
         const ep = data.result;
+        _epData  = ep; // simpan untuk tracking
 
         document.title = (ep.title || 'Nonton') + ' — AniStream';
         const titleEl = document.getElementById('ep-title');
@@ -21,7 +23,7 @@ async function init() {
         if (titleEl) titleEl.textContent = ep.title || 'Episode';
         if (subEl)   subEl.textContent   = '';
 
-        // Build server list — default_embed dulu, lalu mirrors per quality
+        // Build server list
         servers = [];
         if (ep.default_embed) {
             servers.push({ name: 'Default', url: ep.default_embed, type: 'embed' });
@@ -74,11 +76,34 @@ async function init() {
             btnBack.onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
         }
 
+        // ── TRACK WATCHED ──
+        trackEpisode(ep);
+
     } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
         document.getElementById('player-error').style.display   = 'flex';
         showToast('Gagal: ' + e.message);
     }
+}
+
+// ── TRACK EPISODE (fire & forget) ──
+function trackEpisode(ep) {
+    // Tunggu firebase-ready, kalau sudah siap langsung track
+    const doTrack = () => {
+        if (!window.FB) return;
+        FB.onAuthStateChanged(FB.auth, (user) => {
+            if (!user) return; // tidak login = tidak track
+            FB.trackWatchedEpisode(user.uid, {
+                slug:       EP_SLUG,
+                title:      ep.title || '',
+                seriesName: ep.series_name || '',
+                seriesUrl:  ep.series_url  || '',
+            });
+        });
+    };
+
+    if (window.FB) doTrack();
+    else window.addEventListener('firebase-ready', doTrack, { once: true });
 }
 
 function renderServers() {
@@ -101,7 +126,6 @@ window.playServer = async function(idx) {
     const iframe = document.getElementById('iframe-player');
     if (!iframe) return;
 
-    // Hapus video player lama kalau ada
     const oldVideo = document.getElementById('video-player');
     if (oldVideo) oldVideo.remove();
 
@@ -111,27 +135,24 @@ window.playServer = async function(idx) {
         let embedUrl = s.url || null;
 
         if (s.type === 'mirror' && s.id) {
-            // Coba filedon bypass dulu → direct MP4
             const r = await fetch(`/api/anime/filedon?id=${s.id}&i=${s.i}&q=${s.q}`);
             const d = await r.json();
 
             if (d.status && d.result?.mp4_url) {
-                // Direct MP4 — pakai <video> tag
                 iframe.style.display = 'none';
                 const videoEl = document.createElement('video');
-                videoEl.id              = 'video-player';
-                videoEl.controls        = true;
-                videoEl.autoplay        = true;
-                videoEl.style.cssText   = 'width:100%;height:100%;background:#000;display:block;';
-                videoEl.src             = d.result.mp4_url;
-                videoEl.onerror         = () => window.tryNextServer();
+                videoEl.id            = 'video-player';
+                videoEl.controls      = true;
+                videoEl.autoplay      = true;
+                videoEl.style.cssText = 'width:100%;height:100%;background:#000;display:block;';
+                videoEl.src           = d.result.mp4_url;
+                videoEl.onerror       = () => window.tryNextServer();
                 iframe.insertAdjacentElement('afterend', videoEl);
                 document.getElementById('player-loading').style.display = 'none';
                 document.getElementById('player-error').style.display   = 'none';
                 return;
             }
 
-            // Fallback: embed URL dari filedon atau resolve
             embedUrl = d.result?.embed_url || null;
             if (!embedUrl) {
                 const r2 = await fetch(`/api/anime/resolve?id=${s.id}&i=${s.i}&q=${s.q}`);
