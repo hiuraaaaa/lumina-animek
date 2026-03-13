@@ -29,14 +29,20 @@ function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
     const completed = a.status === 'Completed' || a.episode === 'Completed';
-    // Kalau oploverz_url adalah /series/ URL, pakai langsung. Kalau episode URL, extract series slug
-    const detailSlug = (() => {
-        const url = a.oploverz_url || '';
-        const m = url.match(/oploverz\.ch\/series\/([^\/]+)\/?$/);
-        if (m) return m[1]; // sudah anime slug
-        return toAnimeSlug(slug); // strip episode suffix
-    })();
-    return `<div class="anime-card" onclick="window.location.href='/detail?slug=${detailSlug}'">
+    // Otakudesu: url bisa /anime/slug/ atau /episode/slug/
+    // Kalau /anime/ → pakai slug langsung ke detail
+    // Kalau /episode/ atau lainnya → pakai url langsung sebagai ?url=
+    const cardUrl = a.url || a.oploverz_url || '';
+    let detailHref;
+    if (cardUrl.includes('/anime/')) {
+        const animeSlug = cardUrl.replace(/\/$/, '').split('/').pop();
+        detailHref = '/detail?slug=' + animeSlug;
+    } else if (cardUrl.includes('/episode/')) {
+        detailHref = '/detail?url=' + encodeURIComponent(cardUrl);
+    } else {
+        detailHref = '/detail?slug=' + toAnimeSlug(slug);
+    }
+    return `<div class="anime-card" onclick="window.location.href='${detailHref}'">
         <div class="anime-card-poster">
             <img src="${a.poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
@@ -81,15 +87,18 @@ function toAnimeSlug(slug) {
 
 function goDetail(anime) {
     if (typeof anime === 'string') {
-        window.location.href = '/detail?slug=' + toAnimeSlug(anime);
+        window.location.href = '/detail?slug=' + anime;
         return;
     }
-    if (anime.oploverz_url) {
-        const epSlug    = anime.oploverz_url.replace(/\/$/, '').split('/').pop() || '';
-        const animeSlug = toAnimeSlug(epSlug);
-        window.location.href = '/detail?slug=' + animeSlug;
+    const url = anime.url || anime.oploverz_url || '';
+    if (url.includes('/anime/')) {
+        const slug = url.replace(/\/$/, '').split('/').pop();
+        window.location.href = '/detail?slug=' + slug;
         return;
     }
-    const slug = anime.slug || extractSlug(anime);
-    window.location.href = '/detail?slug=' + toAnimeSlug(slug);
+    if (url) {
+        window.location.href = '/detail?url=' + encodeURIComponent(url);
+        return;
+    }
+    window.location.href = '/detail?slug=' + (anime.slug || '');
 }
