@@ -18,6 +18,19 @@ function extractSlug(item) {
     return item.slug;
 }
 
+// ── TYPE: resolve dari meta atau type field ──
+// Otakudesu API return field 'meta' (bukan 'type')
+// Contoh meta: "Senin • TV", "Movie", "OVA", dll
+const TYPE_KEYWORDS = ['Movie', 'Special', 'Live Action', 'OVA', 'TV'];
+function resolveType(a) {
+    if (a.type) return a.type;
+    const meta = a.meta || '';
+    for (const kw of TYPE_KEYWORDS) {
+        if (meta.includes(kw)) return kw;
+    }
+    return '';
+}
+
 // ── BADGE ──
 const BADGE_MAP = {
     'TV': 'badge-tv', 'Movie': 'badge-movie', 'Special': 'badge-special',
@@ -28,11 +41,10 @@ function badgeClass(type) { return BADGE_MAP[type] || 'badge-tv'; }
 // ── CARD ──
 function renderCard(a, i) {
     const slug      = a.slug || extractSlug(a);
+    const type      = resolveType(a);
+    const poster    = a.poster || a.cover || '';
     const completed = a.status === 'Completed' || a.episode === 'Completed';
-    // Otakudesu: url bisa /anime/slug/ atau /episode/slug/
-    // Kalau /anime/ → pakai slug langsung ke detail
-    // Kalau /episode/ atau lainnya → pakai url langsung sebagai ?url=
-    const cardUrl = a.url || a.oploverz_url || '';
+    const cardUrl   = a.url || a.oploverz_url || '';
     let detailHref;
     if (cardUrl.includes('/anime/')) {
         const animeSlug = cardUrl.replace(/\/$/, '').split('/').pop();
@@ -44,14 +56,14 @@ function renderCard(a, i) {
     }
     return `<div class="anime-card" onclick="window.location.href='${detailHref}'">
         <div class="anime-card-poster">
-            <img src="${a.poster}" alt="${a.title}" loading="lazy"
+            <img src="${poster}" alt="${a.title}" loading="lazy"
                  onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
             <div class="anime-card-poster-overlay"></div>
             <div class="anime-card-info">
                 <div class="anime-card-title">${a.title}</div>
                 <div class="anime-card-ep">${a.episode || '–'}</div>
             </div>
-            <span class="anime-card-badge ${badgeClass(a.type)}">${a.type}</span>
+            ${type ? `<span class="anime-card-badge ${badgeClass(type)}">${type}</span>` : ''}
             <span class="status-dot ${completed ? 'completed' : 'ongoing'}"></span>
         </div>
     </div>`;
@@ -74,7 +86,7 @@ async function fetchJSON(url) {
 
 // ── NAVIGATE ──
 function toAnimeSlug(slug) {
-    return slug
+    return (slug || '')
         .replace(/-episode-[^/]*/i, '')
         .replace(/-subtitle-.*/i, '')
         .replace(/-sub-indo.*/i, '')
