@@ -29,7 +29,6 @@ function parseCards($) {
         const eps   = $(el).find('.epx').text().trim();
         const type  = $(el).find('.typez').text().trim();
         if (title && link) {
-            // Extract slug dari URL — ambil path terakhir
             const slug = link.replace(/\/$/, '').split('/').pop() || '';
             results.push({ title, poster: image, episode: eps, type, slug, oploverz_url: link });
         }
@@ -68,7 +67,7 @@ function normalizeList(list = []) {
     return list.map(item => ({ ...item, slug: extractSlug(item) }));
 }
 
-// Home — scrape oploverz.ch
+// Home
 router.get('/home', async (req, res) => {
     try {
         const $ = await scrapePage(`${OPLOVERZ_BASE}/`);
@@ -85,7 +84,7 @@ router.get('/schedule', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Search — scrape oploverz.ch
+// Search
 router.get('/search', async (req, res) => {
     try {
         const { q = '' } = req.query;
@@ -96,7 +95,7 @@ router.get('/search', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Ongoing — scrape oploverz.ch
+// Ongoing
 router.get('/ongoing', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -106,7 +105,7 @@ router.get('/ongoing', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Completed — scrape oploverz.ch
+// Completed
 router.get('/completed', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -132,14 +131,12 @@ router.get('/list', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Anime detail — scrape dari oploverz.ch
+// Anime detail
 router.get('/anime/:slug', async (req, res) => {
     try {
         const slug = req.params.slug;
-        let $;
-        let animeUrl;
+        let $, animeUrl;
 
-        // Coba /series/:slug/ dulu (format baru oploverz)
         const tryUrls = [
             `${OPLOVERZ_BASE}/series/${slug}/`,
             `${OPLOVERZ_BASE}/anime/${slug}/`,
@@ -154,11 +151,9 @@ router.get('/anime/:slug', async (req, res) => {
             } catch(e) {}
         }
 
-        // Kalau masih gagal, coba fetch sebagai halaman episode → cari link /series/
         if (!loaded) {
             try {
-                const $ep      = await scrapePage(`${OPLOVERZ_BASE}/${slug}/`);
-                // "Series <a href="https://oploverz.ch/series/xxx/">"
+                const $ep        = await scrapePage(`${OPLOVERZ_BASE}/${slug}/`);
                 const seriesLink = $ep('a[href*="/series/"]').first().attr('href');
                 if (seriesLink) {
                     $ = await scrapePage(seriesLink);
@@ -169,7 +164,6 @@ router.get('/anime/:slug', async (req, res) => {
         }
 
         if (!loaded) return res.status(404).json({ status: false, message: 'Anime tidak ditemukan' });
-
 
         const title    = $('h1.entry-title, h1').first().text().trim();
         const cover    = $('.bigcontent img[itemprop="image"]').first().attr('src') || null;
@@ -197,7 +191,6 @@ router.get('/anime/:slug', async (req, res) => {
             const name = $(li).find('.epl-title').text().trim();
             const date = $(li).find('.epl-date').text().trim();
             if (link) {
-                // Extract episode slug from oploverz URL
                 const m = link.match(/oploverz\.ch\/([^\/]+)\/?$/);
                 const epSlug = m ? m[1] : link;
                 episodes.push({ num, name, date, link, slug: epSlug });
@@ -206,15 +199,7 @@ router.get('/anime/:slug', async (req, res) => {
 
         res.json({
             status: true,
-            detail: {
-                title,
-                poster: cover,
-                synopsis,
-                info,
-                genres,
-                total_episodes: episodes.length,
-                episodes
-            }
+            detail: { title, poster: cover, synopsis, info, genres, total_episodes: episodes.length, episodes }
         });
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
@@ -227,9 +212,7 @@ router.get('/detail/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Episode watch + streams — scrape oploverz.ch
-// Ganti fungsi scrapeEpisode yang lama dengan ini
-
+// ── scrapeEpisode ──
 async function scrapeEpisode(slug) {
     const url = `${OPLOVERZ_BASE}/${slug}/`;
     const $   = await scrapePage(url);
@@ -281,16 +264,33 @@ async function scrapeEpisode(slug) {
         }
     });
 
+    // Related Episodes
+    const related = [];
+    $('h3').each((_, h3) => {
+        if ($(h3).text().includes('Related')) {
+            $(h3).closest('.bixbox').find('.bsx').each((_, el) => {
+                const a     = $(el).find('a').first();
+                const href  = a.attr('href');
+                const title = a.attr('title') || $(el).find('img').attr('alt') || '';
+                const img   = $(el).find('img').attr('src') || null;
+                if (href) {
+                    const epSlug = href.replace('https://oploverz.ch/', '').replace(/\/$/, '');
+                    related.push({ title, url: href, image: img, slug: epSlug });
+                }
+            });
+        }
+    });
+
     return {
         title, date,
         series: { name: seriesName, url: seriesUrl, cover },
         episode: episodeNum,
         stream, mirrors, downloads,
         nav: { prev, next, all_eps },
-        recommended
+        recommended,
+        related
     };
 }
-
 
 router.get('/episode/:slug', async (req, res) => {
     try {
@@ -299,7 +299,6 @@ router.get('/episode/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-// Watch (alias)
 router.get('/watch/:slug', async (req, res) => {
     try {
         const result = await scrapeEpisode(req.params.slug);
@@ -307,8 +306,7 @@ router.get('/watch/:slug', async (req, res) => {
     } catch (e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
-
-// Proxy Blogger video — bypass CORS
+// Proxy Blogger video
 router.get('/proxy/blogger', async (req, res) => {
     try {
         const { token } = req.query;
@@ -326,12 +324,9 @@ router.get('/proxy/blogger', async (req, res) => {
             maxRedirects: 10,
         });
 
-        // Forward headers
         res.setHeader('Content-Type', response.headers['content-type'] || 'text/html');
         res.setHeader('Access-Control-Allow-Origin', '*');
-        if (response.headers['content-length']) {
-            res.setHeader('Content-Length', response.headers['content-length']);
-        }
+        if (response.headers['content-length']) res.setHeader('Content-Length', response.headers['content-length']);
         response.data.pipe(res);
     } catch (e) {
         res.status(500).json({ status: false, message: e.message });
