@@ -46,13 +46,9 @@
 
   <!-- HERO SLIDER -->
   <section class="hero-slider">
-    <div id="hero-slides" class="hero-slides">
-      <!-- Diisi JS -->
-    </div>
+    <div id="hero-slides" class="hero-slides"></div>
     <div id="hero-counter" class="hero-dots">1/8</div>
-    <div id="hero-dot-nav" class="hero-dot-nav">
-      <!-- Diisi JS -->
-    </div>
+    <div id="hero-dot-nav" class="hero-dot-nav"></div>
   </section>
 
   <!-- SEARCH BAR -->
@@ -65,36 +61,23 @@
     </div>
   </div>
 
-  <!-- EPISODE TERBARU -->
+  <!-- ON-GOING -->
   <section class="section">
     <div class="section-header">
-      <div class="section-title">Episode Terbaru</div>
-      <a href="/search" class="section-more">Lihat Semua →</a>
+      <div class="section-title">On-going Anime</div>
+      <a href="/ongoing" class="section-more">Lihat Semua →</a>
     </div>
-
-    <!-- Filter Chips -->
-    <div class="filter-chips">
-      <button class="chip active" data-filter="all">Semua</button>
-      <button class="chip" data-filter="ongoing">On-going</button>
-      <button class="chip" data-filter="complete">Complete</button>
-      <button class="chip" data-filter="TV">TV</button>
-      <button class="chip" data-filter="Movie">Movie</button>
-      <button class="chip" data-filter="Special">Special</button>
-      <button class="chip" data-filter="OVA">OVA</button>
-    </div>
-
-    <!-- Grid -->
-    <div id="anime-grid" class="anime-grid">
-      <!-- Diisi JS -->
-    </div>
+    <div id="ongoing-grid" class="anime-grid"></div>
   </section>
 
-  <!-- LOAD MORE -->
-  <div class="load-more-wrap">
-    <button id="load-more" class="btn-load-more" style="display:none">
-      Muat Lebih Banyak
-    </button>
-  </div>
+  <!-- COMPLETE -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">Complete Anime</div>
+      <a href="/complete" class="section-more">Lihat Semua →</a>
+    </div>
+    <div id="complete-grid" class="anime-grid"></div>
+  </section>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
@@ -122,10 +105,9 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- FIX: hapus duplikat utils.js, urutan load benar -->
   <script src="/js/utils.js"></script>
   <script src="/js/home.js"></script>
   <script src="/js/lazyload.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => window.lazyLoad?.watchGrid("anime-grid"));</script>
+  <script>document.addEventListener("DOMContentLoaded", () => window.lazyLoad?.watchGrid("ongoing-grid"));</script>
 </body>
 </html>
