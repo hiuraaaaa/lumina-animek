@@ -1,54 +1,44 @@
-// ── WATCH PAGE — animeinweb API ──
-
-const API_STREAM = 'https://animeinweb.com/api/proxy/3/2';
-const AINheaders = {
-    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36 OPR/95.0.0.0',
-    'Referer': 'https://animeinweb.com'
-};
+// ── WATCH PAGE ──
 
 const params   = new URLSearchParams(window.location.search);
-const EP_ID    = params.get('id') || '';
-const MOVIE_ID = params.get('mid') || '';
+const EP_SLUG  = params.get('slug') || '';
+const BACK_SLUG = params.get('anime') || '';
 
 let servers    = [];
 let currentIdx = 0;
-let epData     = null;
-let epNext     = null;
-
-async function fetchStream(id) {
-    const res  = await fetch(`${API_STREAM}/episode/streamnew/${id}`, { headers: AINheaders });
-    const json = await res.json();
-    if (!json.data) throw new Error('Data tidak ditemukan');
-    return json.data;
-}
 
 async function init() {
-    if (!EP_ID) { window.location.href = '/'; return; }
+    if (!EP_SLUG) { window.location.href = '/'; return; }
     try {
-        const data = await fetchStream(EP_ID);
-        epData  = data.episode;
-        epNext  = data.episode_next;
-        servers = data.server || [];
+        const res  = await fetch(`/api/anime/episode/${EP_SLUG}`);
+        const data = await res.json();
+        if (!data.status) throw new Error(data.message || 'Gagal');
 
-        const movieTitle = params.get('title') ? decodeURIComponent(params.get('title')) : 'Anime';
-        document.title = `${epData.title} — AniStream`;
-        document.getElementById('ep-title').textContent = movieTitle;
-        document.getElementById('ep-sub').textContent   = epData.title + (epData.key_time ? ` • ${epData.key_time}` : '');
+        // Support format baru: data.result
+        const ep = data.result || data;
 
+        document.title = (ep.title || 'Nonton') + ' — AniStream';
+        document.getElementById('ep-title').textContent = ep.title || 'Episode';
+        document.getElementById('ep-sub').textContent   = ep.series?.name || (BACK_SLUG ? decodeURIComponent(BACK_SLUG).replace(/-/g,' ') : '');
+
+        // Mirrors → servers. Tambah stream utama juga
+        const mirrorServers = (ep.mirrors || []).map(m => ({ name: m.label, url: m.url }));
+        if (ep.stream && !mirrorServers.length) mirrorServers.unshift({ name: 'Server 1', url: ep.stream });
+        servers = mirrorServers;
         renderServers();
 
-        if (epNext) document.getElementById('btn-next').disabled = false;
-        if (params.get('prev')) document.getElementById('btn-prev').disabled = false;
+        if (servers.length) playServer(0);
 
-        const directIdx = servers.findIndex(s => s.type === 'direct');
-        playServer(directIdx >= 0 ? directIdx : 0);
+        renderDownloads(ep.downloads || []);
 
-        renderDownloads();
-    } catch (e) {
+        // Back to detail
+        const animeSlug = EP_SLUG.replace(/-episode-.*/i,'').replace(/-subtitle-.*/i,'').replace(/-sub-indo.*/i,'');
+        document.getElementById('btn-back').onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
+
+    } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
         document.getElementById('player-error').style.display   = 'flex';
-        document.getElementById('ep-title').textContent = 'Gagal memuat';
-        showToast('Error: ' + e.message);
+        showToast('Gagal: ' + e.message);
     }
 }
 
@@ -59,9 +49,8 @@ function renderServers() {
         return;
     }
     wrap.innerHTML = servers.map((s, i) => `
-        <div class="server-tab ${s.type === 'direct' ? 'direct' : ''}" id="stab-${i}" onclick="playServer(${i})">
+        <div class="server-tab" id="stab-${i}" onclick="playServer(${i})">
             <span class="tab-name">${s.name || 'Server ' + (i+1)}</span>
-            <span class="tab-quality">${s.quality || ''}</span>
         </div>
     `).join('');
 }
@@ -70,24 +59,12 @@ window.playServer = function(idx) {
     if (idx < 0 || idx >= servers.length) return;
     currentIdx = idx;
     const s      = servers[idx];
-    const video  = document.getElementById('video-player');
     const iframe = document.getElementById('iframe-player');
 
     document.querySelectorAll('.server-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
-    showLoading(); hideError();
+    showLoading();
 
-    if (s.type === 'direct') {
-        iframe.style.display = 'none';
-        video.style.display  = 'block';
-        video.src = s.link;
-        video.load();
-        video.play().catch(() => {});
-    } else {
-        video.style.display  = 'none';
-        video.src = '';
-        iframe.style.display = 'block';
-        iframe.src = s.link;
-    }
+    iframe.src = s.url;
 };
 
 window.tryNextServer = function() {
@@ -96,49 +73,44 @@ window.tryNextServer = function() {
     else showToast('Tidak ada server lain');
 };
 
-window.onVideoError = function() { hideLoading(); showError(); };
-window.hideLoading  = function() { document.getElementById('player-loading').style.display = 'none'; };
+window.hideLoading = function() {
+    document.getElementById('player-loading').style.display = 'none';
+};
 
 function showLoading() {
     document.getElementById('player-loading').style.display = 'flex';
     document.getElementById('player-error').style.display   = 'none';
 }
-function showError() {
-    document.getElementById('player-error').style.display   = 'flex';
-    document.getElementById('player-loading').style.display = 'none';
-}
-function hideError() { document.getElementById('player-error').style.display = 'none'; }
 
-window.goNext = function() {
-    if (!epNext) return;
-    const title = encodeURIComponent(params.get('title') || '');
-    window.location.href = `/watch?id=${epNext.id}&mid=${epNext.id_movie || MOVIE_ID}&title=${title}&prev=${EP_ID}`;
-};
-
-window.goPrev = function() {
-    const prevId = params.get('prev');
-    if (!prevId) return;
-    history.back();
-};
-
-function renderDownloads() {
-    const wrap    = document.getElementById('dl-group');
-    const directs = servers.filter(s => s.type === 'direct');
-    if (!directs.length) {
+function renderDownloads(downloads) {
+    const wrap = document.getElementById('dl-group');
+    if (!downloads.length) {
         wrap.innerHTML = '<span style="font-size:12px;color:var(--text3)">Tidak ada link download</span>';
         return;
     }
-    wrap.innerHTML = directs.map(s => `
-        <a href="${s.link}" target="_blank" class="btn-dl">
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            ${s.name || 'Download'}
-            <span class="dl-quality">${s.quality}</span>
-            ${s.key_file_size ? `<span class="dl-quality">${parseFloat(s.key_file_size).toFixed(0)}MB</span>` : ''}
-        </a>
+    // Group by resolution
+    const grouped = {};
+    downloads.forEach(d => {
+        const res = d.resolution || 'Unknown';
+        if (!grouped[res]) grouped[res] = [];
+        grouped[res].push(d);
+    });
+    wrap.innerHTML = Object.entries(grouped).map(([res, links]) => `
+        <div style="width:100%">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:700">${res}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+                ${links.map(l => `
+                    <a href="${l.url}" target="_blank" class="btn-dl">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        ${l.name || 'Download'}
+                    </a>
+                `).join('')}
+            </div>
+        </div>
     `).join('');
 }
 
