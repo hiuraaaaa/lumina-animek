@@ -19,6 +19,20 @@ function toAnimeSlug(slug) {
 
 const ANIME_SLUG = toAnimeSlug(RAW_SLUG);
 
+// ── ESCAPE HTML ──
+function esc(str) {
+    return (str || '').toString()
+        .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── STRIP PREFIX ──
+// Scraper kadang return "Studio: Passione" → strip jadi "Passione"
+function cleanVal(label, val) {
+    if (!val) return '';
+    return val.toString().replace(new RegExp('^' + label + '\\s*:\\s*', 'i'), '').trim();
+}
+
 // ── FETCH ──
 async function fetchDetail(slug) {
     const urlParam = new URLSearchParams(window.location.search).get('url');
@@ -41,7 +55,7 @@ function renderDetail(data) {
 
     // Hero bg
     const heroBg = document.getElementById('hero-bg');
-    if (heroBg) heroBg.style.backgroundImage = `url('${d.cover || d.poster}')`;
+    if (heroBg) heroBg.style.backgroundImage = `url('${esc(d.cover || d.poster)}')`;
 
     // Poster
     const posterEl = document.getElementById('detail-poster');
@@ -55,14 +69,15 @@ function renderDetail(data) {
     setText('detail-title', d.title);
 
     // Judul Jepang
-    const japanese = info['Japanese'] || info['Judul Jepang'] || info['japanese'] || '';
+    const japanese = cleanVal('Japanese', info['Japanese'] || info['Judul Jepang'] || '');
     const japEl    = document.getElementById('detail-japanese');
     if (japEl) { japEl.textContent = japanese; japEl.style.display = japanese ? 'block' : 'none'; }
 
     // Skor
-    const score     = info['Skor'] || info['Score'] || info['Rating'] || '';
+    const rawScore  = info['Skor'] || info['Score'] || info['Rating'] || '';
+    const score     = cleanVal('Skor', rawScore);
     const scoreWrap = document.getElementById('detail-score-wrap');
-    if (score && scoreWrap) {
+    if (score && score !== '-' && scoreWrap) {
         setText('detail-score', score);
         scoreWrap.style.display = 'block';
     }
@@ -70,24 +85,27 @@ function renderDetail(data) {
     // Status
     const statusEl = document.getElementById('detail-status');
     if (statusEl) {
-        const status   = info['Status'] || info.status || '–';
-        const ongoing  = status.toLowerCase().includes('ongoing') || status.toLowerCase().includes('berlangsung');
+        const rawStatus = info['Status'] || '';
+        const status    = cleanVal('Status', rawStatus) || '–';
+        const ongoing   = status.toLowerCase().includes('ongoing') || status.toLowerCase().includes('berlangsung');
         statusEl.textContent = status;
         statusEl.className   = 'status-pill ' + (ongoing ? 'ongoing' : 'completed');
     }
 
-    // Info grid (kartu kecil)
-    setText('detail-studio',   info['Studio']        || info['studio']   || '–');
-    setText('detail-type',     info['Tipe']          || info['Type']     || info['type'] || '–');
-    setText('detail-season',   info['Musim']         || info['Season']   || info['season'] || '–');
-    setText('detail-duration', info['Durasi']        || info['Duration'] || info['duration'] || '–');
+    // Badges ringkas: Tipe • Total Episode
+    const tipe      = cleanVal('Tipe',          info['Tipe']          || info['Type']    || '');
+    const totalEp   = cleanVal('Total Episode', info['Total Episode'] || '') || (d.total_episodes ? String(d.total_episodes) : '');
+    const badgesEl  = document.getElementById('detail-badges');
+    if (badgesEl) {
+        const badges = [tipe, totalEp ? totalEp + ' Ep' : ''].filter(Boolean);
+        badgesEl.innerHTML = badges.map(b => `<span class="info-badge">${esc(b)}</span>`).join('');
+    }
 
     // Synopsis
     const synEl = document.getElementById('detail-synopsis');
     if (synEl) {
-        let syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
+        const syn = (d.synopsis || '').replace(/^Sinopsis:\s*/i, '').trim();
         synEl.textContent = syn || 'Sinopsis belum tersedia untuk anime ini.';
-        // Toggle hanya tampil kalau synopsis panjang
         const toggleEl = document.getElementById('synopsis-toggle');
         if (toggleEl) toggleEl.style.display = syn.length > 150 ? 'inline-block' : 'none';
     }
@@ -98,39 +116,30 @@ function renderDetail(data) {
         const genres = d.genres || [];
         genresEl.innerHTML = genres.map(g => {
             const name = typeof g === 'string' ? g : (g.name || '');
-            return `<span class="genre-chip" onclick="goSearch('${name}')">${name}</span>`;
+            return `<span class="genre-chip" onclick="goSearch('${esc(name)}')">${esc(name)}</span>`;
         }).join('') || '<span style="color:var(--text3);font-size:13px">–</span>';
     }
 
-    // Info table lengkap — semua field dari scraper
-    // Scraper kadang return nilai dengan prefix label, contoh: "Status: Ongoing" -> strip prefix
-    function cleanVal(label, val) {
-        if (!val) return '';
-        return val.toString().replace(new RegExp('^' + label + '\s*:\s*', 'i'), '').trim();
-    }
+    // Info table lengkap
     const infoTable = document.getElementById('detail-info-table');
     if (infoTable) {
         const fields = [
-            ['Judul',          info['Judul']         || d.title],
-            ['Japanese',       info['Japanese']      || info['Judul Jepang']],
-            ['Produser',       info['Produser']      || info['Producer']],
-            ['Tipe',           info['Tipe']          || info['Type']],
-            ['Status',         info['Status']],
-            ['Total Episode',  info['Total Episode'] || (d.total_episodes ? String(d.total_episodes) : null)],
-            ['Durasi',         info['Durasi']        || info['Duration']],
-            ['Tanggal Rilis',  info['Tanggal Rilis'] || info['Release Date'] || info['Aired']],
-            ['Musim',          info['Musim']         || info['Season']],
-            ['Studio',         info['Studio']],
-            ['Skor',           info['Skor']          || info['Score']],
+            ['Judul',         info['Judul']         || d.title],
+            ['Japanese',      info['Japanese']      || info['Judul Jepang']],
+            ['Produser',      info['Produser']      || info['Producer']],
+            ['Tipe',          info['Tipe']          || info['Type']],
+            ['Status',        info['Status']],
+            ['Total Episode', info['Total Episode'] || (d.total_episodes ? String(d.total_episodes) : null)],
+            ['Durasi',        info['Durasi']        || info['Duration']],
+            ['Tanggal Rilis', info['Tanggal Rilis'] || info['Release Date'] || info['Aired']],
+            ['Musim',         info['Musim']         || info['Season']],
+            ['Studio',        info['Studio']],
+            ['Skor',          info['Skor']          || info['Score']],
         ];
         infoTable.innerHTML = fields
             .map(([label, val]) => [label, cleanVal(label, val)])
-            .filter(([, val]) => val && val !== 'Unknown' && val !== '?')
-            .map(([label, val]) => `
-                <tr>
-                    <td>${label}</td>
-                    <td>${val}</td>
-                </tr>`)
+            .filter(([, val]) => val && val !== 'Unknown' && val !== '?' && val !== '-')
+            .map(([label, val]) => `<tr><td>${esc(label)}</td><td>${esc(val)}</td></tr>`)
             .join('');
     }
 
@@ -152,12 +161,16 @@ function setText(id, val) {
 // ── WATCH BUTTON ──
 function updateWatchBtn() {
     const btn = document.getElementById('btn-watch');
-    if (!btn || !allEps.length) return;
+    if (!btn) return;
+    if (!allEps.length) { btn.style.display = 'none'; return; }
     const firstEp = allEps[0];
+    const label   = firstEp.label
+        ? firstEp.label.replace(/subtitle indonesia/i, '').trim()
+        : 'Episode 1';
     btn.onclick   = () => goWatch(firstEp.slug || firstEp.url);
     btn.innerHTML = `
         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-        Tonton ${firstEp.label || 'Episode 1'}
+        Tonton ${esc(label)}
     `;
 }
 
@@ -182,16 +195,18 @@ function renderEpisodes() {
     }
 
     container.innerHTML = slice.map((ep, i) => {
-        const epNum   = ep.label ? ep.label.replace(/.*Episode\s*/i, '').trim() : (ep.num || ep.episode || '');
+        const epNum   = ep.label
+            ? ep.label.replace(/.*Episode\s*/i, '').replace(/subtitle indonesia/i, '').trim()
+            : (ep.num || ep.episode || '');
         const epTitle = ep.name || ep.title || ep.label || '';
         const epDate  = ep.date || ep.release_date || '';
         const epDest  = ep.slug || ep.url || '';
         return `
-        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${epDest}')">
-            <div class="ep-num">Ep ${epNum}</div>
+        <div class="ep-item" style="animation-delay:${(i % 20) * 25}ms" onclick="goWatch('${esc(epDest)}')">
+            <div class="ep-num">Ep ${esc(epNum)}</div>
             <div class="ep-info">
-                <div class="ep-title">${epTitle}</div>
-                ${epDate ? `<div class="ep-date">${epDate}</div>` : ''}
+                <div class="ep-title">${esc(epTitle)}</div>
+                ${epDate ? `<div class="ep-date">${esc(epDate)}</div>` : ''}
             </div>
             <div class="ep-play">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -219,26 +234,28 @@ function toggleSort() {
 function renderRecommendations(recs) {
     const section = document.getElementById('rec-section');
     const grid    = document.getElementById('rec-grid');
-    if (!section || !grid || !recs.length) return;
+    if (!section || !grid) return;
+    if (!recs.length) { section.style.display = 'none'; return; }
 
     grid.innerHTML = recs.map(a => {
         const cover = a.cover || a.poster || '';
         const url   = a.url   || '';
-        let href = '/';
+        let href;
         if (url.includes('/anime/')) {
-            const slug = url.replace(/\/$/, '').split('/').pop();
-            href = '/detail?slug=' + slug;
+            href = '/detail?slug=' + url.replace(/\/$/, '').split('/').pop();
         } else if (url) {
             href = '/detail?url=' + encodeURIComponent(url);
+        } else {
+            href = '/';
         }
         return `
         <div class="anime-card" onclick="window.location.href='${href}'">
             <div class="anime-card-poster">
-                <img src="${cover}" alt="${a.title}" loading="lazy"
+                <img src="${esc(cover)}" alt="${esc(a.title)}" loading="lazy"
                      onerror="this.src='https://placehold.co/200x300/181818/333?text=No+Image'">
                 <div class="anime-card-poster-overlay"></div>
                 <div class="anime-card-info">
-                    <div class="anime-card-title">${a.title}</div>
+                    <div class="anime-card-title">${esc(a.title)}</div>
                 </div>
             </div>
         </div>`;
@@ -290,8 +307,8 @@ async function init() {
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 <h3>Gagal Memuat</h3>
-                <p>${err.message}</p>
-                <small style="color:var(--text3);display:block;margin-top:8px">Slug: ${ANIME_SLUG}</small>
+                <p>${esc(err.message)}</p>
+                <small style="color:var(--text3);display:block;margin-top:8px">Slug: ${esc(ANIME_SLUG)}</small>
                 <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">← Kembali</button>
             </div>`;
     }
