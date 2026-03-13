@@ -65,7 +65,7 @@ window.playServer = function(idx) {
     document.querySelectorAll('.server-tab').forEach((el, i) => el.classList.toggle('active', i === idx));
     showLoading();
 
-    iframe.src = s.url;
+    iframe.src = toProxyUrl(s.url);
 };
 
 window.tryNextServer = function() {
