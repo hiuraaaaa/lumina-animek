@@ -103,9 +103,13 @@ function renderDetail(data) {
     }
 
     // Info table lengkap — semua field dari scraper
+    // Scraper kadang return nilai dengan prefix label, contoh: "Status: Ongoing" -> strip prefix
+    function cleanVal(label, val) {
+        if (!val) return '';
+        return val.toString().replace(new RegExp('^' + label + '\s*:\s*', 'i'), '').trim();
+    }
     const infoTable = document.getElementById('detail-info-table');
     if (infoTable) {
-        // Urutan tampil
         const fields = [
             ['Judul',          info['Judul']         || d.title],
             ['Japanese',       info['Japanese']      || info['Judul Jepang']],
@@ -120,7 +124,8 @@ function renderDetail(data) {
             ['Skor',           info['Skor']          || info['Score']],
         ];
         infoTable.innerHTML = fields
-            .filter(([, val]) => val && val.trim && val.trim())
+            .map(([label, val]) => [label, cleanVal(label, val)])
+            .filter(([, val]) => val && val !== 'Unknown' && val !== '?')
             .map(([label, val]) => `
                 <tr>
                     <td>${label}</td>
