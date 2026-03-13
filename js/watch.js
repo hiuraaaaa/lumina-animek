@@ -33,7 +33,8 @@ async function init() {
 
         // Back to detail
         const animeSlug = EP_SLUG.replace(/-episode-.*/i,'').replace(/-subtitle-.*/i,'').replace(/-sub-indo.*/i,'');
-        document.getElementById('btn-back').onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
+        const btnBack = document.getElementById('btn-back');
+        if (btnBack) btnBack.onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
 
     } catch(e) {
         document.getElementById('player-loading').style.display = 'none';
