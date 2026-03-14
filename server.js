@@ -28,6 +28,7 @@ app.get('/genre',     (req, res) => res.sendFile(pub('genre.html')));
 app.get('/login',     (req, res) => res.sendFile(pub('login.html')));
 app.get('/profile',   (req, res) => res.sendFile(pub('profile.html')));
 app.get('/watchlist', (req, res) => res.sendFile(pub('watchlist.html')));
+app.get('/list', (req, res) => res.sendFile(pub('list.html')));
 
 app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
 
