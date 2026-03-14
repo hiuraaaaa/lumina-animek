@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Anime List — AniStream</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { padding: 18px 18px 4px; }
+    .page-header-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px; font-weight: 800; letter-spacing: -0.3px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .page-header-sub {
+      font-size: 11px; color: var(--text3);
+      margin-top: 4px; padding-left: 30px;
+      font-family: 'Syne', sans-serif; letter-spacing: 0.3px;
+    }
+
+    /* ── ALPHABET BAR ── */
+    .alpha-wrap {
+      padding: 14px 18px 0;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .alpha-bar {
+      display: flex; gap: 4px; min-width: max-content;
+    }
+    .alpha-btn {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 800;
+      color: var(--text3); background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 0;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .alpha-btn.active {
+      background: var(--accent); border-color: var(--accent); color: white;
+    }
+    .alpha-btn:active { opacity: 0.7; }
+
+    /* ── RESULT INFO ── */
+    .result-info {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px 10px;
+    }
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .result-title::before {
+      content: ''; width: 3px; height: 13px;
+      background: var(--accent2); border-radius: 0;
+    }
+    .result-count {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; color: var(--text3); font-weight: 700;
+    }
+
+    /* ── ANIME LIST ── */
+    #anime-list { display: flex; flex-direction: column; gap: 1px; margin: 0 18px; }
+
+    .anime-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      border-left: 2px solid transparent;
+      cursor: pointer; transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      gap: 12px;
+    }
+    .anime-list-item:first-child { border-top: 1px solid var(--border); }
+    .anime-list-item:active { background: var(--bg3); border-left-color: var(--accent2); }
+
+    .anime-list-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 700;
+      color: var(--text); flex: 1; min-width: 0;
+      line-height: 1.4;
+    }
+
+    .status-badge {
+      font-family: 'Syne', sans-serif;
+      font-size: 8px; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 0; flex-shrink: 0;
+    }
+    .status-badge.ongoing   { background: rgba(34,197,94,0.12); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
+    .status-badge.completed { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.15); }
+
+    /* ── SKELETON ── */
+    .list-skeleton {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .sk-title-line { height: 11px; background: var(--bg3); border-radius: 0; width: 65%; }
+    .sk-badge { height: 18px; width: 60px; background: var(--bg3); border-radius: 0; }
+
+    /* ── EMPTY ── */
+    .empty-list {
+      text-align: center; padding: 48px 24px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; color: var(--text3);
+    }
+    .empty-list h3 { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+
+    /* ── LOAD MORE ── */
+    .load-more-wrap { padding: 16px 18px; }
+    #load-more {
+      width: 100%; padding: 13px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 0;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text2); cursor: pointer; display: none;
+      transition: all 0.15s;
+    }
+    #load-more:active { background: var(--bg3); color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+    <div class="topnav-actions">
+      <a href="/search" class="icon-btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-title">
+      <svg width="18" height="18" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      Anime List
+    </div>
+    <div class="page-header-sub">Semua anime tersedia di AniStream</div>
+  </div>
+
+  <!-- ALPHABET BAR -->
+  <div class="alpha-wrap">
+    <div class="alpha-bar" id="alpha-bar">
+      <div class="alpha-btn active" data-letter="ALL" onclick="filterLetter('ALL')">All</div>
+      <!-- Diisi JS -->
+    </div>
+  </div>
+
+  <!-- RESULT INFO -->
+  <div class="result-info">
+    <div class="result-title" id="result-title">Semua Anime</div>
+    <div class="result-count" id="result-count"></div>
+  </div>
+
+  <!-- LIST -->
+  <div id="anime-list"></div>
+
+  <!-- LOAD MORE -->
+  <div class="load-more-wrap">
+    <button id="load-more" onclick="loadMore()">Muat Lebih Banyak</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='/'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span>Beranda</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/genre'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Genre</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/schedule'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Jadwal</span>
+    </div>
+    <div class="nav-item active" onclick="window.location.href='/list'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <span>List</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/profile'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profil</span>
+    </div>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+  <script src="/js/utils.js"></script>
+  <script>
+    const BATCH = 50;
+    let allAnime    = [];
+    let filtered    = [];
+    let shown       = 0;
+    let activeLetter = 'ALL';
+
+    const SKELETON = Array(10).fill(`
+      <div class="list-skeleton">
+        <div class="sk-title-line"></div>
+        <div class="sk-badge"></div>
+      </div>`).join('');
+
+    async function init() {
+      const wrap = document.getElementById('anime-list');
+      wrap.innerHTML = SKELETON;
+      try {
+        const data = await fetchJSON('/api/anime/anime-list');
+        allAnime = data.anime_list || [];
+
+        // Build alphabet bar dari data
+        const letters = [...new Set(allAnime.map(a => a.title[0]?.toUpperCase()).filter(Boolean))].sort();
+        const bar = document.getElementById('alpha-bar');
+        bar.innerHTML = `<div class="alpha-btn active" data-letter="ALL" onclick="filterLetter('ALL')">All</div>`
+          + letters.map(l => `<div class="alpha-btn" data-letter="${l}" onclick="filterLetter('${l}')">${l}</div>`).join('');
+
+        filterLetter('ALL');
+      } catch(e) {
+        document.getElementById('anime-list').innerHTML = `
+          <div class="empty-list"><h3>Gagal Memuat</h3><p>${e.message}</p></div>`;
+        showToast('Gagal memuat list');
+      }
+    }
+
+    function filterLetter(letter) {
+      activeLetter = letter;
+      document.querySelectorAll('.alpha-btn').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.letter === letter));
+
+      filtered = letter === 'ALL'
+        ? allAnime
+        : allAnime.filter(a => a.title[0]?.toUpperCase() === letter);
+
+      shown = 0;
+      document.getElementById('result-title').textContent = letter === 'ALL' ? 'Semua Anime' : `Huruf ${letter}`;
+      document.getElementById('result-count').textContent = `${filtered.length} anime`;
+      document.getElementById('anime-list').innerHTML = '';
+      document.getElementById('load-more').style.display = 'none';
+
+      // Scroll alpha bar ke huruf aktif
+      const activeBtn = document.querySelector(`.alpha-btn[data-letter="${letter}"]`);
+      activeBtn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+      renderBatch();
+    }
+
+    function renderBatch() {
+      const wrap  = document.getElementById('anime-list');
+      const batch = filtered.slice(shown, shown + BATCH);
+      batch.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'anime-list-item';
+        div.onclick = () => window.location.href = `/detail?slug=${a.slug}`;
+        const isOngoing = a.status?.toLowerCase().includes('ongoing') || a.status?.toLowerCase().includes('on-going');
+        const badgeClass = isOngoing ? 'ongoing' : (a.status ? 'completed' : '');
+        const badgeText  = isOngoing ? 'Ongoing' : (a.status ? 'Completed' : '');
+        div.innerHTML = `
+          <div class="anime-list-title">${escHtml(a.title)}</div>
+          ${badgeText ? `<span class="status-badge ${badgeClass}">${badgeText}</span>` : ''}
+        `;
+        wrap.appendChild(div);
+      });
+      shown += batch.length;
+      document.getElementById('load-more').style.display = shown < filtered.length ? 'block' : 'none';
+      document.getElementById('result-count').textContent = `${filtered.length} anime`;
+    }
+
+    function loadMore() { renderBatch(); }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
