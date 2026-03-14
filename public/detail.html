@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Detail Anime — LunarStream</title>
-  <!-- fix: tambah favicon -->
-  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <title>Detail Anime — AniStream</title>
   <link rel="stylesheet" href="/css/main.css">
   <style>
+    /* ── NO SELECT ── */
     * { -webkit-user-select: none; user-select: none; }
     input, textarea { -webkit-user-select: text; user-select: text; }
 
+    /* ── HERO ── */
     .detail-hero { position:relative; height:220px; overflow:hidden; }
     .hero-bg-blur {
       position:absolute; inset:0;
@@ -20,44 +19,56 @@
     }
     .hero-overlay {
       position:absolute; inset:0;
-      background:linear-gradient(to bottom, rgba(8,8,8,0.2) 0%, rgba(8,8,8,0.5) 50%, rgba(8,8,8,1) 100%);
+      background:linear-gradient(to bottom,
+        rgba(8,8,8,0.2) 0%,
+        rgba(8,8,8,0.5) 50%,
+        rgba(8,8,8,1) 100%);
     }
     .hero-topnav {
       position:absolute; top:0; left:0; right:0;
       display:flex; align-items:center; justify-content:space-between;
       padding:14px 16px; z-index:10;
     }
-    /* fix: topnav-logo di hero pakai flex bukan inline */
-    .hero-topnav .topnav-logo {
-      display:flex; align-items:center; gap:0;
-      font-family:'Outfit', sans-serif;
-      font-size:20px; font-weight:800; letter-spacing:-0.5px;
-      cursor:pointer; color:var(--text);
-    }
-    .hero-topnav .topnav-logo svg { color:var(--accent2); flex-shrink:0; margin-right:5px; }
-    .hero-topnav .topnav-logo span { color:var(--accent2); }
 
-    .detail-card { position:relative; margin:-70px 16px 0; display:flex; gap:16px; z-index:2; }
+    /* ── POSTER + META ── */
+    .detail-card {
+      position:relative;
+      margin:-70px 16px 0;
+      display:flex; gap:16px; z-index:2;
+    }
     .detail-poster {
-      width:105px; flex-shrink:0; border-radius:0; overflow:hidden;
-      box-shadow:0 12px 40px rgba(0,0,0,0.8); aspect-ratio:2/3;
-      border:1px solid rgba(255,255,255,0.06);
+      width:105px; flex-shrink:0;
+      border-radius:0;
+      overflow:hidden;
+      box-shadow:0 12px 40px rgba(0,0,0,0.8);
+      aspect-ratio:2/3;
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .detail-poster img { width:100%; height:100%; object-fit:cover; }
 
     .detail-meta { flex:1; padding-top:10px; min-width:0; }
-    .detail-title-text { font-family:'Outfit',sans-serif; font-size:15px; font-weight:800; line-height:1.25; margin-bottom:5px; letter-spacing:-0.3px; }
-    .detail-japanese { font-size:10px; color:var(--text3); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .detail-title-text {
+      font-family:'Outfit', sans-serif;
+      font-size:15px; font-weight:800;
+      line-height:1.25; margin-bottom:5px;
+      letter-spacing:-0.3px;
+    }
+    .detail-japanese {
+      font-size:10px; color:var(--text3);
+      margin-bottom:8px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
     .score-badge {
       display:inline-flex; align-items:center; gap:4px;
       background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2);
       color:#fbbf24; font-size:11px; font-weight:800;
       padding:2px 8px; border-radius:0; margin-bottom:6px;
-      font-family:'Outfit',sans-serif;
+      font-family:'Outfit', sans-serif;
     }
     .status-pill {
       display:inline-flex; align-items:center; gap:5px;
-      font-family:'Outfit',sans-serif; font-size:9px; font-weight:800;
+      font-family:'Outfit', sans-serif;
+      font-size:9px; font-weight:800;
       padding:3px 9px; border-radius:0; margin-bottom:8px;
       text-transform:uppercase; letter-spacing:0.5px;
     }
@@ -66,68 +77,141 @@
     .status-pill.completed { background:rgba(148,163,184,0.1); color:#94a3b8; }
 
     .detail-badges { display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
-    .info-badge { font-family:'Outfit',sans-serif; font-size:9px; font-weight:800; color:var(--text2); background:var(--bg3); border:1px solid var(--border); padding:2px 8px; border-radius:0; text-transform:uppercase; letter-spacing:0.3px; }
+    .info-badge {
+      font-family:'Outfit', sans-serif;
+      font-size:9px; font-weight:800;
+      color:var(--text2); background:var(--bg3);
+      border:1px solid var(--border);
+      padding:2px 8px; border-radius:0;
+      text-transform:uppercase; letter-spacing:0.3px;
+    }
 
+    /* ── ACTIONS ── */
     .detail-actions { display:flex; gap:10px; padding:18px 16px 0; }
     .btn-watch {
       flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
-      background:var(--accent); color:white; font-family:'Outfit',sans-serif;
+      background:var(--accent); color:white;
+      font-family:'Outfit', sans-serif;
       font-size:12px; font-weight:800; letter-spacing:0.5px;
       padding:14px; border-radius:0; border:none; cursor:pointer;
       transition:all 0.15s; text-transform:uppercase;
     }
     .btn-watch:active { background:#1d4ed8; transform:scale(0.98); }
     .btn-save {
-      width:48px; height:48px; display:flex; align-items:center; justify-content:center;
+      width:48px; height:48px;
+      display:flex; align-items:center; justify-content:center;
       background:var(--bg2); border:1px solid var(--border);
-      border-radius:0; color:var(--text2); cursor:pointer; transition:all 0.15s; flex-shrink:0;
+      border-radius:0; color:var(--text2);
+      cursor:pointer; transition:all 0.15s; flex-shrink:0;
     }
     .btn-save.saved { background:rgba(37,99,235,0.1); border-color:var(--accent2); color:var(--accent2); }
     .btn-save:active { background:var(--bg3); }
 
+    /* ── SECTIONS ── */
     .detail-section { padding:22px 16px 0; }
     .section-label {
-      font-family:'Outfit',sans-serif; font-size:10px; font-weight:800; color:var(--text3);
-      text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px;
+      font-family:'Outfit', sans-serif;
+      font-size:10px; font-weight:800;
+      color:var(--text3);
+      text-transform:uppercase; letter-spacing:1.5px;
+      margin-bottom:12px;
       display:flex; align-items:center; gap:8px;
     }
-    .section-label::before { content:''; width:3px; height:13px; background:var(--accent2); border-radius:0; flex-shrink:0; }
+    .section-label::before {
+      content:''; width:3px; height:13px;
+      background:var(--accent2); border-radius:0; flex-shrink:0;
+    }
 
-    .synopsis-text { font-size:13px; color:var(--text2); line-height:1.8; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    /* ── SYNOPSIS ── */
+    .synopsis-text {
+      font-size:13px; color:var(--text2); line-height:1.8;
+      display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    }
     .synopsis-text.expanded { -webkit-line-clamp:unset; }
-    .synopsis-toggle { font-family:'Outfit',sans-serif; font-size:10px; color:var(--accent2); font-weight:800; margin-top:8px; display:inline-block; cursor:pointer; letter-spacing:0.5px; text-transform:uppercase; }
+    .synopsis-toggle {
+      font-family:'Outfit', sans-serif;
+      font-size:10px; color:var(--accent2); font-weight:800;
+      margin-top:8px; display:inline-block; cursor:pointer;
+      letter-spacing:0.5px; text-transform:uppercase;
+    }
 
+    /* ── GENRES ── */
     #detail-genres { display:flex; flex-wrap:wrap; gap:6px; }
-    .genre-chip { padding:5px 12px; border-radius:0; font-family:'Outfit',sans-serif; font-size:10px; font-weight:700; background:var(--bg2); border:1px solid var(--border); color:var(--text2); cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.3px; }
+    .genre-chip {
+      padding:5px 12px; border-radius:0;
+      font-family:'Outfit', sans-serif;
+      font-size:10px; font-weight:700;
+      background:var(--bg2); border:1px solid var(--border); color:var(--text2);
+      cursor:pointer; transition:all 0.15s;
+      text-transform:uppercase; letter-spacing:0.3px;
+    }
     .genre-chip:active { background:rgba(37,99,235,0.15); border-color:var(--accent2); color:var(--accent2); }
 
+    /* ── INFO TABLE ── */
     .info-table { width:100%; border-collapse:collapse; }
     .info-table tr { border-bottom:1px solid var(--border); }
     .info-table tr:last-child { border-bottom:none; }
     .info-table td { padding:9px 4px; font-size:12px; vertical-align:top; }
-    .info-table td:first-child { font-family:'Outfit',sans-serif; color:var(--text3); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; width:36%; padding-right:8px; }
+    .info-table td:first-child {
+      font-family:'Outfit', sans-serif;
+      color:var(--text3); font-weight:700;
+      font-size:10px; text-transform:uppercase; letter-spacing:0.5px;
+      width:36%; padding-right:8px;
+    }
     .info-table td:last-child { color:var(--text2); font-size:12px; }
 
+    /* ── EPISODES ── */
     .ep-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-    #sort-btn { font-family:'Outfit',sans-serif; font-size:10px; font-weight:800; color:var(--accent2); background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2); padding:5px 12px; border-radius:0; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; transition:all 0.15s; }
+    #sort-btn {
+      font-family:'Outfit', sans-serif;
+      font-size:10px; font-weight:800; color:var(--accent2);
+      background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2);
+      padding:5px 12px; border-radius:0; cursor:pointer;
+      text-transform:uppercase; letter-spacing:0.5px;
+      transition:all 0.15s;
+    }
     #sort-btn:active { background:rgba(37,99,235,0.15); }
+
     #ep-list { display:flex; flex-direction:column; gap:1px; }
-    .ep-item { display:flex; align-items:center; gap:12px; background:var(--bg2); border-left:2px solid transparent; padding:13px 14px; cursor:pointer; transition:all 0.15s; animation:fadeUp 0.3s ease both; -webkit-tap-highlight-color:transparent; }
-    .ep-item:first-child { border-top:1px solid var(--border); }
-    .ep-item { border-bottom:1px solid var(--border); }
+
+    .ep-item {
+      display:flex; align-items:center; gap:12px;
+      background:var(--bg2);
+      border-left: 2px solid transparent;
+      padding:13px 14px; cursor:pointer;
+      transition:all 0.15s; animation:fadeUp 0.3s ease both;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ep-item:first-child { border-top: 1px solid var(--border); }
+    .ep-item { border-bottom: 1px solid var(--border); }
     .ep-item:active { background:var(--bg3); border-left-color:var(--accent2); }
-    .ep-num { font-family:'Outfit',sans-serif; font-size:13px; font-weight:800; color:var(--accent2); min-width:38px; flex-shrink:0; }
-    .ep-info { flex:1; min-width:0; }
+
+    .ep-num {
+      font-family:'Outfit', sans-serif;
+      font-size:13px; font-weight:800;
+      color:var(--accent2); min-width:38px; flex-shrink:0;
+    }
+    .ep-info  { flex:1; min-width:0; }
     .ep-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
-    .ep-date  { font-size:10px; color:var(--text3); margin-top:3px; font-family:'Outfit',sans-serif; }
+    .ep-date  { font-size:10px; color:var(--text3); margin-top:3px; font-family:'Outfit', sans-serif; }
     .ep-play  { color:var(--text3); flex-shrink:0; }
-    #ep-load-more { width:100%; padding:13px; background:var(--bg2); border:1px solid var(--border); border-radius:0; font-family:'Outfit',sans-serif; font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--text2); cursor:pointer; margin-top:1px; display:none; transition:all 0.15s; }
+
+    #ep-load-more {
+      width:100%; padding:13px;
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:0;
+      font-family:'Outfit', sans-serif;
+      font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+      color:var(--text2); cursor:pointer; margin-top:1px; display:none;
+      transition:all 0.15s;
+    }
     #ep-load-more:active { background:var(--bg3); color:var(--text); }
 
+    /* ── REC GRID ── */
     .rec-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 
-    /* fix: skeleton — default hidden via JS, bukan CSS display:none hardcode */
-    #detail-skeleton { }
+    /* ── SKELETON ── */
+    #detail-skeleton { display:none; }
     .sk-hero { height:220px; background:var(--bg2); animation:pulse 1.4s ease-in-out infinite; }
     .sk-card { margin:-70px 16px 0; display:flex; gap:16px; }
     .sk-poster { width:105px; aspect-ratio:2/3; background:var(--bg3); border-radius:0; flex-shrink:0; animation:pulse 1.4s ease-in-out infinite; }
@@ -140,7 +224,7 @@
 </head>
 <body>
 
-  <!-- SKELETON — fix: show by default, JS yang hide -->
+  <!-- SKELETON -->
   <div id="detail-skeleton">
     <div class="sk-hero"></div>
     <div class="sk-card">
@@ -154,8 +238,10 @@
     </div>
   </div>
 
+  <!-- DETAIL CONTENT -->
   <div id="detail-content" style="display:none">
 
+    <!-- HERO -->
     <div class="detail-hero">
       <div class="hero-bg-blur" id="hero-bg"></div>
       <div class="hero-overlay"></div>
@@ -163,10 +249,7 @@
         <button class="icon-btn" onclick="history.back()">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
         </button>
-        <!-- fix: flex logo, no inline vertical-align -->
-        <div class="topnav-logo" onclick="window.location.href='/'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"></path></svg>Lunar<span>Stream</span>
-        </div>
+        <div class="topnav-logo" onclick="window.location.href='/'"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" style="color:var(--accent2);margin-right:5px;flex-shrink:0;vertical-align:middle" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"></path></svg>Lunar<span>Stream</span></div>
         <button class="icon-btn" onclick="shareAnime()">
           <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -177,14 +260,19 @@
       </div>
     </div>
 
+    <!-- POSTER + META -->
     <div class="detail-card">
-      <div class="detail-poster"><img id="detail-poster" src="" alt="" loading="lazy"></div>
+      <div class="detail-poster">
+        <img id="detail-poster" src="" alt="">
+      </div>
       <div class="detail-meta">
         <div class="detail-title-text" id="detail-title">–</div>
         <div class="detail-japanese" id="detail-japanese"></div>
         <div id="detail-score-wrap" style="display:none">
           <span class="score-badge">
-            <svg width="10" height="10" fill="#fbbf24" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+            <svg width="10" height="10" fill="#fbbf24" viewBox="0 0 24 24">
+              <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+            </svg>
             <span id="detail-score">–</span>
           </span>
         </div>
@@ -193,6 +281,7 @@
       </div>
     </div>
 
+    <!-- ACTIONS -->
     <div class="detail-actions">
       <button class="btn-watch" id="btn-watch">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
@@ -205,22 +294,26 @@
       </button>
     </div>
 
+    <!-- SYNOPSIS -->
     <div class="detail-section">
       <div class="section-label">Sinopsis</div>
       <div class="synopsis-text" id="detail-synopsis">–</div>
       <span class="synopsis-toggle" id="synopsis-toggle" onclick="toggleSynopsis()" style="display:none">Baca Selengkapnya</span>
     </div>
 
+    <!-- GENRES -->
     <div class="detail-section">
       <div class="section-label">Genre</div>
       <div id="detail-genres"></div>
     </div>
 
+    <!-- INFO LENGKAP -->
     <div class="detail-section">
       <div class="section-label">Informasi</div>
       <table class="info-table" id="detail-info-table"></table>
     </div>
 
+    <!-- EPISODES -->
     <div class="detail-section" style="padding-bottom:24px">
       <div class="ep-header">
         <div class="section-label" style="margin-bottom:0"><span id="ep-count">Episode</span></div>
@@ -230,6 +323,7 @@
       <button id="ep-load-more" onclick="loadMoreEps()">Muat Lebih Banyak</button>
     </div>
 
+    <!-- REKOMENDASI -->
     <div class="detail-section" id="rec-section" style="display:none; padding-bottom:80px">
       <div class="section-label">Rekomendasi</div>
       <div class="rec-grid" id="rec-grid"></div>
@@ -237,7 +331,7 @@
 
   </div>
 
-  <!-- BOTTOM NAV — fix: Tersimpan → List -->
+  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="window.location.href='/'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
@@ -251,14 +345,9 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Jadwal</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/list'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-        <line x1="8" y1="18" x2="21" y2="18"/>
-        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
-        <line x1="3" y1="18" x2="3.01" y2="18"/>
-      </svg>
-      <span>List</span>
+    <div class="nav-item" onclick="window.location.href='/watchlist'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      <span>Tersimpan</span>
     </div>
     <div class="nav-item" onclick="window.location.href='/profile'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
