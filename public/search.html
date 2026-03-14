@@ -3,27 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Cari Anime — AniStream</title>
+  <title>Cari Anime — LunarStream</title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
   <link rel="stylesheet" href="/css/main.css">
   <style>
     * { -webkit-user-select: none; user-select: none; }
     input, textarea { -webkit-user-select: text; user-select: text; }
 
-    /* ── SEARCH BAR ── */
     .search-page-bar {
       display: flex; align-items: center; gap: 10px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-bottom: 1px solid var(--border2);
-      border-radius: 0;
-      padding: 13px 16px;
-      margin: 0 16px 16px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-bottom: 1px solid var(--border2); border-radius: 0;
+      padding: 13px 16px; margin: 0 16px 16px;
       transition: border-color 0.2s, background 0.2s;
     }
-    .search-page-bar:focus-within {
-      border-color: var(--accent2);
-      background: var(--bg3);
-    }
+    .search-page-bar:focus-within { border-color: var(--accent2); background: var(--bg3); }
     .search-page-bar svg { color: var(--text3); flex-shrink: 0; }
     .search-page-bar input {
       flex: 1; background: none; border: none; outline: none;
@@ -34,42 +29,32 @@
 
     #search-clear {
       display: none; align-items: center; justify-content: center;
-      width: 22px; height: 22px;
-      border-radius: 0;
+      width: 22px; height: 22px; border-radius: 0;
       background: var(--bg4); color: var(--text3);
       flex-shrink: 0; font-size: 12px; cursor: pointer; border: none;
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
     }
 
-    /* ── RESULT COUNT ── */
     #result-count {
-      font-family: 'Syne', sans-serif;
-      font-size: 10px; font-weight: 700;
-      color: var(--text3); letter-spacing: 0.5px;
-      text-transform: uppercase;
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px; font-weight: 700; color: var(--text3);
+      letter-spacing: 0.5px; text-transform: uppercase;
       padding: 0 18px 14px;
     }
 
-    /* ── PLACEHOLDER ── */
     .search-placeholder { padding: 24px 16px; }
     .placeholder-title {
-      font-family: 'Syne', sans-serif;
-      font-size: 10px; font-weight: 800;
-      color: var(--text3);
-      text-transform: uppercase; letter-spacing: 1.5px;
-      margin-bottom: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px; font-weight: 800; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
       display: flex; align-items: center; gap: 8px;
     }
-    .placeholder-title::before {
-      content: ''; width: 3px; height: 13px;
-      background: var(--accent2); border-radius: 0;
-    }
+    .placeholder-title::before { content: ''; width: 3px; height: 13px; background: var(--accent2); border-radius: 0; }
 
     .trending-list { display: flex; flex-direction: column; gap: 1px; }
     .trending-item {
       display: flex; align-items: center; gap: 14px;
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 10px; border-bottom: 1px solid var(--border);
       cursor: pointer; transition: background 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
@@ -77,58 +62,37 @@
     .trending-item:active { background: var(--bg2); }
 
     .trending-num {
-      font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 800;
-      color: var(--text3); width: 20px;
-      text-align: center; flex-shrink: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 800; color: var(--text3);
+      width: 20px; text-align: center; flex-shrink: 0;
     }
     .trending-num.top { color: var(--accent2); }
-
-    .trending-text {
-      flex: 1;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500;
-      color: var(--text2);
-    }
+    .trending-text { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text2); }
     .trending-icon { color: var(--text3); }
 
-    /* ── GRID ── */
-    #search-grid {
-      padding: 0 16px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
+    #search-grid { padding: 0 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
-    /* ── LOAD MORE ── */
     .load-more-wrap { padding: 16px; }
     #load-more {
       width: 100%; padding: 13px;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 0;
-      font-family: 'Syne', sans-serif;
-      font-size: 10px; font-weight: 800;
-      letter-spacing: 1px; text-transform: uppercase;
-      color: var(--text2); cursor: pointer; display: none;
-      transition: all 0.15s;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 0;
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text2); cursor: pointer; display: none; transition: all 0.15s;
     }
     #load-more:active { background: var(--bg3); color: var(--text); }
   </style>
 </head>
 <body>
 
-  <!-- TOP NAV -->
   <nav class="topnav">
     <button class="icon-btn" onclick="history.back()">
-      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <polyline points="15,18 9,12 15,6"/>
-      </svg>
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
     </button>
-    <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+    <div class="topnav-logo" onclick="window.location.href='/'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" style="color:var(--accent2);margin-right:5px;flex-shrink:0" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"></path></svg>Lunar<span>Stream</span></div>
     <div style="width:38px"></div>
   </nav>
 
-  <!-- SEARCH BAR -->
   <div class="search-page-bar">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -137,42 +101,42 @@
     <button id="search-clear">✕</button>
   </div>
 
-  <!-- RESULT COUNT -->
   <div id="result-count"></div>
-
-  <!-- SEARCH GRID -->
   <div id="search-grid"></div>
 
-  <!-- PLACEHOLDER -->
   <div id="search-placeholder" class="search-placeholder">
     <div class="placeholder-title">Populer Dicari</div>
     <div class="trending-list" id="trending-list"></div>
   </div>
 
-  <!-- LOAD MORE -->
   <div class="load-more-wrap">
     <button id="load-more">Muat Lebih Banyak</button>
   </div>
 
-  <!-- BOTTOM NAV -->
+  <!-- BOTTOM NAV — fix: Tersimpan → List -->
   <nav class="bottom-nav">
-    <div class="nav-item" id="nav-home" onclick="window.location.href='/'">
+    <div class="nav-item" onclick="window.location.href='/'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       <span>Beranda</span>
     </div>
-    <div class="nav-item" id="nav-genre" onclick="window.location.href='/genre'">
+    <div class="nav-item" onclick="window.location.href='/genre'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       <span>Genre</span>
     </div>
-    <div class="nav-item" id="nav-schedule" onclick="window.location.href='/schedule'">
+    <div class="nav-item" onclick="window.location.href='/schedule'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Jadwal</span>
     </div>
-    <div class="nav-item" id="nav-watchlist" onclick="window.location.href='/watchlist'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-      <span>Tersimpan</span>
+    <div class="nav-item" onclick="window.location.href='/list'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <span>List</span>
     </div>
-    <div class="nav-item" id="nav-profile" onclick="window.location.href='/profile'">
+    <div class="nav-item" onclick="window.location.href='/profile'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       <span>Profil</span>
     </div>
