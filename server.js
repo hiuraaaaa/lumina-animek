@@ -35,6 +35,11 @@ app.get('/watchlist', (req, res) => res.sendFile(pub('watchlist.html')));
 app.get('/list', (req, res) => res.sendFile(pub('list.html')));
 app.get('/admin',       (req, res) => res.sendFile(pub('admin.html')));
 app.get('/admin/login', (req, res) => res.sendFile(pub('admin-login.html')));
+
+//pages
+app.get('/about',   (req, res) => res.sendFile(path.join(__dirname, 'public/pages/about.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/pages/privacy.html')));
+app.get('/terms',   (req, res) => res.sendFile(path.join(__dirname, 'public/pages/terms.html')));
 app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
 
 if (require.main === module) {
