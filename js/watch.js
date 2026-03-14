@@ -25,22 +25,30 @@ async function init() {
         if (titleEl) titleEl.textContent = ep.title || 'Episode';
         if (subEl)   subEl.textContent   = '';
 
-        // Build server list
+        // Build server list grouped by quality
         servers = [];
         if (ep.default_embed) {
-            servers.push({ name: 'LunarSrv', url: ep.default_embed, type: 'embed' });
+            servers.push({ name: 'Lunar', url: ep.default_embed, type: 'embed', q: 'default' });
         }
         const qualities = ['720p', '480p', '360p'];
         for (const q of qualities) {
             const list = ep.mirrors?.[q] || [];
             for (let idx = 0; idx < list.length; idx++) {
                 const m = list[idx];
-                servers.push({ name: `${m.name} ${q}`, id: m.id, i: String(idx), q, type: 'mirror' });
+                servers.push({ name: m.name, id: m.id, i: String(idx), q, type: 'mirror' });
             }
         }
 
+        // Auto pilih quality terbaik yang tersedia
+        const preferredQ = ['720p', '480p', '360p', 'default'];
+        activeQuality = preferredQ.find(q => servers.some(s => s.q === q)) || 'all';
+
+        renderQualityChips();
         renderServers();
-        if (servers.length) playServer(0);
+
+        // Auto play server pertama dari quality terpilih
+        const firstServer = getFilteredServers()[0];
+        if (firstServer) playServer(servers.indexOf(firstServer));
 
         renderDownloads(ep.downloads || {});
         renderEpisodeList(ep.episode_list || [], EP_SLUG);
@@ -105,14 +113,64 @@ function trackEpisode(ep) {
     else window.addEventListener('firebase-ready', doTrack, { once: true });
 }
 
+let activeQuality = 'all';
+
+function renderQualityChips() {
+    const wrap = document.getElementById('quality-chips');
+    if (!wrap) return;
+
+    // Kumpulkan quality yang tersedia
+    const available = ['all'];
+    if (servers.some(s => s.q === 'default')) available.push('default');
+    ['720p', '480p', '360p'].forEach(q => {
+        if (servers.some(s => s.q === q)) available.push(q);
+    });
+
+    if (available.length <= 2) { wrap.style.display = 'none'; return; }
+
+    const labels = { all: 'Semua', default: 'Lunar', '720p': '720p', '480p': '480p', '360p': '360p' };
+    wrap.innerHTML = available.map(q => `
+        <div class="quality-chip${q === activeQuality ? ' active' : ''}" onclick="setQuality('${q}')">
+            ${labels[q] || q}
+        </div>
+    `).join('');
+}
+
+window.setQuality = function(q) {
+    activeQuality = q;
+    // Update chip active state
+    document.querySelectorAll('.quality-chip').forEach(el => {
+        el.classList.toggle('active', el.textContent.trim() === (
+            q === 'all' ? 'Semua' : q === 'default' ? 'Lunar' : q
+        ));
+    });
+    renderServers();
+    // Auto play server pertama dari quality ini
+    const filtered = getFilteredServers();
+    if (filtered.length) {
+        const idx = servers.indexOf(filtered[0]);
+        if (idx >= 0) playServer(idx);
+    }
+};
+
+function getFilteredServers() {
+    if (activeQuality === 'all') return servers;
+    return servers.filter(s => s.q === activeQuality);
+}
+
 function renderServers() {
     const wrap = document.getElementById('server-tabs');
     if (!wrap) return;
-    wrap.innerHTML = servers.map((s, i) => `
-        <div class="server-tab${i === 0 ? ' active' : ''}" id="stab-${i}" onclick="playServer(${i})">
-            ${s.name}
-        </div>
-    `).join('');
+    const filtered = getFilteredServers();
+    if (!filtered.length) {
+        wrap.innerHTML = '<span style="font-size:11px;color:var(--text3)">Tidak ada server</span>';
+        return;
+    }
+    wrap.innerHTML = filtered.map((s) => {
+        const realIdx = servers.indexOf(s);
+        const isActive = realIdx === currentIdx;
+        return `<div class="server-tab${isActive ? ' active' : ''}" onclick="playServer(${realIdx})">${s.name}</div>`;
+    }).join('');
 }
 
 window.playServer = async function(idx) {
