@@ -5,29 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>LunarStream — Nonton Anime Sub Indo Gratis</title>
 
-  <!-- ── FAVICON ── -->
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/assets/site.webmanifest">
 
-  <!-- ── SEO ── -->
   <meta name="description" content="Nonton anime subtitle Indonesia terlengkap dan terbaru. Update setiap hari, gratis tanpa iklan.">
   <meta name="keywords" content="nonton anime, anime sub indo, anime subtitle indonesia, anime gratis, streaming anime">
   <meta name="author" content="LunarStream">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#080808">
-
-  <!-- ── OPEN GRAPH ── -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LunarStream">
   <meta property="og:title" content="LunarStream — Nonton Anime Sub Indo Gratis">
   <meta property="og:description" content="Nonton anime subtitle Indonesia terlengkap dan terbaru. Update setiap hari, gratis tanpa iklan.">
   <meta property="og:image" content="/assets/og-image.png">
   <meta property="og:url" content="https://lumina-animek.vercel.app">
-
-  <!-- ── TWITTER CARD ── -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="LunarStream — Nonton Anime Sub Indo Gratis">
   <meta name="twitter:description" content="Nonton anime subtitle Indonesia terlengkap dan terbaru.">
@@ -38,6 +32,7 @@
     * { -webkit-user-select: none; user-select: none; }
     input, textarea { -webkit-user-select: text; user-select: text; }
 
+    /* ── SPLASH ── */
     #splash {
       position: fixed; inset: 0; z-index: 99999;
       background: #080808;
@@ -51,83 +46,58 @@
     }
     #splash-logo svg { color: var(--accent2); flex-shrink: 0; }
     #splash-logo .logo-text {
-      position: relative;
-      display: flex; align-items: center;
+      position: relative; display: flex; align-items: center;
       font-family: 'Outfit', sans-serif;
       font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
     }
-    #splash-logo .logo-text .word {
-      position: relative; display: inline-block;
-    }
-    #splash-logo .logo-text .word.lunar { color: var(--text); }
+    #splash-logo .logo-text .word { position: relative; display: inline-block; }
+    #splash-logo .logo-text .word.lunar  { color: var(--text); }
     #splash-logo .logo-text .word.stream { color: var(--accent2); }
-    #splash-logo .logo-text .word.blur { filter: blur(4px); opacity: 0.4; }
-    #splash-logo .logo-text .word.focus { filter: blur(0); opacity: 1; }
-
-    /* Focus box */
     #splash-focus-box {
-      position: absolute;
-      border: 1.5px solid var(--accent2);
+      position: absolute; border: 1.5px solid var(--accent2);
       pointer-events: none;
-      transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4,0,0.2,1); opacity: 0;
     }
-    #splash-focus-box::before,
-    #splash-focus-box::after {
-      content: '';
-      position: absolute;
-      width: 8px; height: 8px;
+    #splash-focus-box::before, #splash-focus-box::after {
+      content: ''; position: absolute; width: 8px; height: 8px;
       border-color: var(--accent2); border-style: solid;
     }
-    #splash-focus-box::before {
-      top: -3px; left: -3px;
-      border-width: 2px 0 0 2px;
-    }
-    #splash-focus-box::after {
-      bottom: -3px; right: -3px;
-      border-width: 0 2px 2px 0;
-    }
+    #splash-focus-box::before { top:-3px; left:-3px; border-width: 2px 0 0 2px; }
+    #splash-focus-box::after  { bottom:-3px; right:-3px; border-width: 0 2px 2px 0; }
 
     @keyframes splashIn {
       from { opacity: 0; transform: translateY(8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    @keyframes wordFocus {
-      0%   { filter: blur(4px); opacity: 0.4; }
-      100% { filter: blur(0);   opacity: 1; }
-    }
-    @keyframes wordBlur {
-      0%   { filter: blur(0);   opacity: 1; }
-      100% { filter: blur(4px); opacity: 0.4; }
-    }
+    @keyframes wordFocus { 0% { filter:blur(4px); opacity:0.4; } 100% { filter:blur(0); opacity:1; } }
+    @keyframes wordBlur  { 0% { filter:blur(0);   opacity:1;   } 100% { filter:blur(4px); opacity:0.4; } }
 
-    /* ── LOGO WITH MOON ── */
+    /* ── TOPNAV LOGO — fix spasi ── */
     .topnav-logo {
-      display: flex; align-items: center; gap: 6px;
+      display: flex; align-items: center; gap: 0;
     }
-    .topnav-logo svg { color: var(--accent2); flex-shrink: 0; }
+    .topnav-logo svg { color: var(--accent2); flex-shrink: 0; margin-right: 5px; }
+
+    /* ── HERO — fix layout shift ── */
+    .hero-slider { min-height: calc(100vw * 9 / 16); max-height: 270px; }
 
     /* ── HOME FOOTER ── */
     .home-footer {
-      margin: 28px 18px 0;
-      padding: 18px 0;
+      margin: 28px 18px 0; padding: 18px 0;
       border-top: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 10px;
     }
-    .home-footer-top {
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .home-footer-top { display: flex; align-items: center; justify-content: space-between; }
     .home-footer-logo {
-      display: flex; align-items: center; gap: 5px;
-      font-family: 'Syne', sans-serif;
-      font-size: 13px; font-weight: 800;
-      color: var(--text2);
+      display: flex; align-items: center; gap: 0;
+      font-family: 'Outfit', sans-serif; /* fix: was Syne */
+      font-size: 13px; font-weight: 800; color: var(--text2);
     }
     .home-footer-logo span { color: var(--accent2); }
-    .home-footer-logo svg { color: var(--accent2); }
+    .home-footer-logo svg { color: var(--accent2); margin-right: 5px; }
     .home-footer-links { display: flex; gap: 12px; }
     .home-footer-link {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
       text-transform: uppercase; color: var(--text3);
       cursor: pointer; transition: color 0.15s;
@@ -135,12 +105,11 @@
     .home-footer-link:active { color: var(--accent2); }
     .home-footer-disclaimer {
       font-size: 10px; color: var(--text3); line-height: 1.6;
-      padding: 8px 10px;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-left: 2px solid var(--text3);
+      padding: 8px 10px; background: var(--bg2);
+      border: 1px solid var(--border); border-left: 2px solid var(--text3);
     }
     .home-footer-copy {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Outfit', sans-serif;
       font-size: 9px; color: var(--text3); line-height: 1.5;
     }
   </style>
@@ -276,50 +245,20 @@
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
 
-    // ── TRUE FOCUS ANIMATION ──
+    // ── SPLASH ── (cek dulu sebelum jalanin animasi)
     (function() {
-      const lunar  = document.getElementById('splash-word-lunar');
-      const stream = document.getElementById('splash-word-stream');
-      const box    = document.getElementById('splash-focus-box');
-      if (!lunar || !stream || !box) return;
+      const splashShown = sessionStorage.getItem('splash_shown');
 
-      function moveFocusBox(target) {
-        const rect      = target.getBoundingClientRect();
-        const parentRect = target.closest('.logo-text').getBoundingClientRect();
-        box.style.width  = rect.width  + 8 + 'px';
-        box.style.height = rect.height + 6 + 'px';
-        box.style.left   = (rect.left - parentRect.left - 4) + 'px';
-        box.style.top    = (rect.top  - parentRect.top  - 3) + 'px';
-        box.style.opacity = '1';
-      }
-
-      function focusLunar() {
-        lunar.style.animation  = 'wordFocus 0.4s ease forwards';
-        stream.style.animation = 'wordBlur 0.4s ease forwards';
-        moveFocusBox(lunar);
-      }
-      function focusStream() {
-        stream.style.animation = 'wordFocus 0.4s ease forwards';
-        lunar.style.animation  = 'wordBlur 0.4s ease forwards';
-        moveFocusBox(stream);
-      }
-
-      // Start after splashIn animation
-      setTimeout(() => {
-        focusLunar();
-        setTimeout(() => focusStream(), 900);
-        setTimeout(() => focusLunar(),  1800);
-        setTimeout(() => focusStream(), 2700);
-      }, 600);
-    })();
-
-    (function() {
-      if (sessionStorage.getItem('splash_shown')) {
+      if (splashShown) {
+        // Skip splash + animasi sepenuhnya
         document.getElementById('splash')?.remove();
         return;
       }
+
+      // Pertama kali — jalankan animasi
       sessionStorage.setItem('splash_shown', '1');
       document.body.style.overflow = 'hidden';
+
       window.hideSplash = function() {
         const splash = document.getElementById('splash');
         if (!splash) return;
@@ -328,6 +267,31 @@
         setTimeout(() => splash.remove(), 420);
       };
       setTimeout(window.hideSplash, 5000);
+
+      // True focus animation
+      const lunar  = document.getElementById('splash-word-lunar');
+      const stream = document.getElementById('splash-word-stream');
+      const box    = document.getElementById('splash-focus-box');
+      if (!lunar || !stream || !box) return;
+
+      function moveFocusBox(target) {
+        const rect       = target.getBoundingClientRect();
+        const parentRect = target.closest('.logo-text').getBoundingClientRect();
+        box.style.width   = rect.width  + 8 + 'px';
+        box.style.height  = rect.height + 6 + 'px';
+        box.style.left    = (rect.left - parentRect.left - 4) + 'px';
+        box.style.top     = (rect.top  - parentRect.top  - 3) + 'px';
+        box.style.opacity = '1';
+      }
+      function focusLunar()  { lunar.style.animation = 'wordFocus 0.4s ease forwards'; stream.style.animation = 'wordBlur 0.4s ease forwards';  moveFocusBox(lunar);  }
+      function focusStream() { stream.style.animation = 'wordFocus 0.4s ease forwards'; lunar.style.animation  = 'wordBlur 0.4s ease forwards'; moveFocusBox(stream); }
+
+      setTimeout(() => {
+        focusLunar();
+        setTimeout(() => focusStream(), 900);
+        setTimeout(() => focusLunar(),  1800);
+        setTimeout(() => focusStream(), 2700);
+      }, 600);
     })();
   </script>
   <script src="/js/utils.js"></script>
@@ -336,6 +300,7 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       window.lazyLoad?.watchGrid("ongoing-grid");
+      window.lazyLoad?.watchGrid("complete-grid"); // fix: complete grid juga
     });
   </script>
 </body>
