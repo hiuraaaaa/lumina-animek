@@ -34,6 +34,19 @@
     .profile-email { font-size: 11px; color: var(--text3); margin-top: -4px; font-family: 'Syne', sans-serif; }
     .profile-bio { font-size: 12px; color: var(--text2); max-width: 280px; line-height: 1.6; }
 
+    /* ── ADMIN BADGE ── */
+    .admin-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(96,165,250,0.1);
+      border: 1px solid rgba(96,165,250,0.3);
+      padding: 3px 10px;
+    }
+    .admin-badge svg { flex-shrink: 0; }
+
     .profile-stats {
       display: flex; margin: 0 18px 20px;
       background: var(--bg2); border: 1px solid var(--border);
@@ -71,43 +84,26 @@
 
     /* ── COPYRIGHT FOOTER ── */
     .profile-footer {
-      margin: 28px 18px 0;
-      padding: 20px 0;
+      margin: 28px 18px 0; padding: 20px 0;
       border-top: 1px solid var(--border);
       display: flex; flex-direction: column; gap: 12px;
     }
-    .footer-logo {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px; font-weight: 800; letter-spacing: -0.3px;
-      color: var(--text2);
-    }
+    .footer-logo { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; letter-spacing: -0.3px; color: var(--text2); }
     .footer-logo span { color: var(--accent2); }
-    .footer-desc {
-      font-size: 11px; color: var(--text3); line-height: 1.6;
-      max-width: 320px;
-    }
-    .footer-links {
-      display: flex; flex-wrap: wrap; gap: 6px;
-    }
+    .footer-desc { font-size: 11px; color: var(--text3); line-height: 1.6; max-width: 320px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 6px; }
     .footer-link {
-      font-family: 'Syne', sans-serif;
-      font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
-      text-transform: uppercase; color: var(--text3);
-      padding: 4px 10px; border: 1px solid var(--border);
-      cursor: pointer; transition: all 0.15s;
+      font-family: 'Syne', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--text3); padding: 4px 10px;
+      border: 1px solid var(--border); cursor: pointer; transition: all 0.15s;
     }
     .footer-link:active { color: var(--accent2); border-color: var(--accent2); }
-    .footer-copy {
-      font-family: 'Syne', sans-serif;
-      font-size: 9px; color: var(--text3);
-      letter-spacing: 0.3px; line-height: 1.6;
-    }
+    .footer-copy { font-family: 'Syne', sans-serif; font-size: 9px; color: var(--text3); letter-spacing: 0.3px; line-height: 1.6; }
     .footer-copy span { color: var(--text3); opacity: 0.6; }
     .footer-disclaimer {
       font-size: 10px; color: var(--text3); line-height: 1.6;
-      padding: 10px 12px;
-      background: var(--bg2); border: 1px solid var(--border);
-      border-left: 2px solid var(--text3);
+      padding: 10px 12px; background: var(--bg2);
+      border: 1px solid var(--border); border-left: 2px solid var(--text3);
     }
 
     /* ── MODAL ── */
@@ -142,7 +138,6 @@
     }
     .btn-save-modal:active { background: #1d4ed8; }
     .btn-save-modal:disabled { opacity: 0.4; cursor: not-allowed; }
-
     .spinner { width: 32px; height: 32px; border: 2.5px solid var(--bg3); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; }
   </style>
 </head>
@@ -176,9 +171,16 @@
           </svg>
         </div>
       </div>
-      <div class="profile-name"  id="profile-name">–</div>
+      <div class="profile-name" id="profile-name">–</div>
       <div class="profile-email" id="profile-email">–</div>
-      <div class="profile-bio"   id="profile-bio" style="display:none"></div>
+      <!-- ADMIN BADGE — hidden by default -->
+      <div class="admin-badge" id="admin-badge" style="display:none">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        Admin
+      </div>
+      <div class="profile-bio" id="profile-bio" style="display:none"></div>
     </div>
 
     <div class="profile-stats">
@@ -221,6 +223,20 @@
         <div class="menu-item-text">
           <div class="menu-item-title">Edit Profil</div>
           <div class="menu-item-sub">Ubah nama dan bio</div>
+        </div>
+        <svg class="menu-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+      </div>
+
+      <!-- ADMIN MENU — hidden by default -->
+      <div class="menu-item" id="menu-admin" style="display:none" onclick="window.location.href='/admin'">
+        <div class="menu-icon" style="background:rgba(96,165,250,0.1)">
+          <svg width="17" height="17" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Admin Dashboard</div>
+          <div class="menu-item-sub">Kelola pengguna & monitoring</div>
         </div>
         <svg class="menu-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
       </div>
@@ -311,8 +327,20 @@
         document.getElementById('profile-loading').style.display = 'none';
         document.getElementById('profile-content').style.display = 'block';
         renderProfile(user, currentProfile);
+        checkAdmin(user);
       });
     });
+
+    async function checkAdmin(user) {
+      try {
+        const res  = await fetch('/api/admin/check', { headers: { 'x-user-email': user.email } });
+        const data = await res.json();
+        if (data.isAdmin) {
+          document.getElementById('admin-badge').style.display = 'inline-flex';
+          document.getElementById('menu-admin').style.display  = 'flex';
+        }
+      } catch(e) {}
+    }
 
     function renderProfile(user, profile) {
       const avatarEl = document.getElementById('avatar-display');
