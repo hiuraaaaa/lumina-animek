@@ -5,7 +5,9 @@ const EP_SLUG = params.get('slug') || '';
 
 let servers    = [];
 let currentIdx = 0;
-let _epData    = null; // simpan data episode untuk tracking
+let _epData    = null;
+let _abortCtrl = null; // cancel pending fetch saat ganti server
+let _playing   = false; // prevent double-click
 
 async function init() {
     if (!EP_SLUG) { window.location.href = '/'; return; }
@@ -15,9 +17,9 @@ async function init() {
         if (!data.status) throw new Error(data.message || 'Gagal memuat episode');
 
         const ep = data.result;
-        _epData  = ep; // simpan untuk tracking
+        _epData  = ep;
 
-        document.title = (ep.title || 'Nonton') + ' — AniStream';
+        document.title = (ep.title || 'Nonton') + ' — LunarStream';
         const titleEl = document.getElementById('ep-title');
         const subEl   = document.getElementById('ep-sub');
         if (titleEl) titleEl.textContent = ep.title || 'Episode';
@@ -26,7 +28,7 @@ async function init() {
         // Build server list
         servers = [];
         if (ep.default_embed) {
-            servers.push({ name: 'Default', url: ep.default_embed, type: 'embed' });
+            servers.push({ name: 'LunarSrv', url: ep.default_embed, type: 'embed' });
         }
         const qualities = ['720p', '480p', '360p'];
         for (const q of qualities) {
@@ -76,7 +78,6 @@ async function init() {
             btnBack.onclick = () => window.location.href = `/detail?slug=${animeSlug}`;
         }
 
-        // ── TRACK WATCHED ──
         trackEpisode(ep);
 
     } catch(e) {
@@ -86,13 +87,12 @@ async function init() {
     }
 }
 
-// ── TRACK EPISODE (fire & forget) ──
+// ── TRACK EPISODE ──
 function trackEpisode(ep) {
-    // Tunggu firebase-ready, kalau sudah siap langsung track
     const doTrack = () => {
         if (!window.FB) return;
         FB.onAuthStateChanged(FB.auth, (user) => {
-            if (!user) return; // tidak login = tidak track
+            if (!user) return;
             FB.trackWatchedEpisode(user.uid, {
                 slug:       EP_SLUG,
                 title:      ep.title || '',
@@ -101,7 +101,6 @@ function trackEpisode(ep) {
             });
         });
     };
-
     if (window.FB) doTrack();
     else window.addEventListener('firebase-ready', doTrack, { once: true });
 }
@@ -118,8 +117,13 @@ function renderServers() {
 
 window.playServer = async function(idx) {
     if (idx < 0 || idx >= servers.length) return;
-    currentIdx = idx;
+    if (_playing && idx === currentIdx) return; // prevent double-click same server
 
+    // Cancel fetch sebelumnya
+    if (_abortCtrl) { _abortCtrl.abort(); _abortCtrl = null; }
+
+    currentIdx = idx;
+    _playing   = true;
     document.querySelectorAll('.server-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
 
     const s      = servers[idx];
@@ -131,11 +135,14 @@ window.playServer = async function(idx) {
 
     window.showLoading();
 
+    _abortCtrl = new AbortController();
+    const signal = _abortCtrl.signal;
+
     try {
         let embedUrl = s.url || null;
 
         if (s.type === 'mirror' && s.id) {
-            const r = await fetch(`/api/anime/filedon?id=${s.id}&i=${s.i}&q=${s.q}`);
+            const r = await fetch(`/api/anime/filedon?id=${s.id}&i=${s.i}&q=${s.q}`, { signal });
             const d = await r.json();
 
             if (d.status && d.result?.mp4_url) {
@@ -150,12 +157,13 @@ window.playServer = async function(idx) {
                 iframe.insertAdjacentElement('afterend', videoEl);
                 document.getElementById('player-loading').style.display = 'none';
                 document.getElementById('player-error').style.display   = 'none';
+                _playing = false;
                 return;
             }
 
             embedUrl = d.result?.embed_url || null;
             if (!embedUrl) {
-                const r2 = await fetch(`/api/anime/resolve?id=${s.id}&i=${s.i}&q=${s.q}`);
+                const r2 = await fetch(`/api/anime/resolve?id=${s.id}&i=${s.i}&q=${s.q}`, { signal });
                 const d2 = await r2.json();
                 if (d2.status) embedUrl = d2.result?.embed_url || null;
             }
@@ -166,14 +174,18 @@ window.playServer = async function(idx) {
         if (!embedUrl) {
             window.hideLoading();
             document.getElementById('player-error').style.display = 'flex';
+            _playing = false;
             return;
         }
         iframe.src = embedUrl;
+        _playing   = false;
 
     } catch(e) {
+        if (e.name === 'AbortError') return; // user ganti server, ignore
         window.hideLoading();
         document.getElementById('player-error').style.display = 'flex';
         showToast('Gagal load server: ' + e.message);
+        _playing = false;
     }
 };
 
@@ -228,14 +240,25 @@ function renderEpisodeList(list, currentSlug) {
     const wrap    = document.getElementById('rel-list');
     if (!wrap || !list.length) return;
     section.style.display = 'block';
+
+    // Scroll ke episode aktif setelah render
     wrap.innerHTML = list.map(ep => {
         const isActive = ep.slug === currentSlug;
         const num = ep.label.replace(/episode\s*/i, 'Ep ');
-        return `<div class="rel-item${isActive ? ' active' : ''}" onclick="${isActive ? '' : `window.location.href='/watch?slug=${ep.slug}'`}">
+        return `<div class="rel-item${isActive ? ' active' : ''}" id="${isActive ? 'rel-active' : ''}"
+            onclick="${isActive ? '' : `window.location.href='/watch?slug=${ep.slug}'`}">
             <span>${num}</span>
-            ${isActive ? '<span style="font-size:11px;opacity:0.8">▶ Sedang diputar</span>' : '<span class="rel-item-num">▶</span>'}
+            ${isActive
+                ? '<span style="font-size:11px;opacity:0.8">▶ Sedang diputar</span>'
+                : '<span class="rel-item-num">▶</span>'}
         </div>`;
     }).join('');
+
+    // Scroll ke episode aktif
+    setTimeout(() => {
+        const active = document.getElementById('rel-active');
+        if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 300);
 }
 
 function showToast(msg) {
