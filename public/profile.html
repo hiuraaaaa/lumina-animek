@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Profil — AniStream</title>
+  <title>Profil — LunarStream</title>
   <link rel="stylesheet" href="/css/main.css">
   <style>
     * { -webkit-user-select: none; user-select: none; }
@@ -152,7 +152,7 @@
     <button class="icon-btn" onclick="history.back()">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
     </button>
-    <div class="topnav-logo" onclick="window.location.href='/'">ani<span>stream</span></div>
+    <div class="topnav-logo" onclick="window.location.href='/'">Lunar<span>Stream</span></div>
     <button class="icon-btn" onclick="showEditModal()">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -230,7 +230,7 @@
 
     <!-- COPYRIGHT FOOTER -->
     <div class="profile-footer">
-      <div class="footer-logo">ani<span>stream</span></div>
+      <div class="footer-logo">Lunar<span>Stream</span></div>
       <div class="footer-desc">Platform streaming anime subtitle Indonesia. Semua konten tersedia gratis untuk dinikmati.</div>
       <div class="footer-links">
         <span class="footer-link" onclick="showToast('Segera hadir!')">Tentang</span>
@@ -242,7 +242,7 @@
         Situs ini tidak menyimpan file video apapun di servernya. Semua konten disematkan dari pihak ketiga. Jika ada konten yang melanggar hak cipta, hubungi kami untuk penghapusan.
       </div>
       <div class="footer-copy">
-        © <span id="footer-year"></span> AniStream. Dibuat dengan ♥ untuk para wibu Indonesia.<br>
+        © <span id="footer-year"></span> LunarStream. Dibuat oleh Robin.<br>
         <span>v1.0.0 — All rights reserved.</span>
       </div>
     </div>
@@ -280,9 +280,14 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span>Jadwal</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/watchlist'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-      <span>Tersimpan</span>
+    <div class="nav-item" onclick="window.location.href='/list'">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <span>ListAnime</span>
     </div>
     <div class="nav-item active" onclick="window.location.href='/profile'">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
