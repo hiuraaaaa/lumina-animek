@@ -11,10 +11,13 @@ function renderHero(list) {
     const slider = document.getElementById('hero-slides');
     const dots   = document.getElementById('hero-dot-nav');
     if (!slider || !dots) return;
-    slider.innerHTML = heroAnime.map(a => {
+
+    slider.innerHTML = heroAnime.map((a, i) => {
         const poster = a.poster || a.cover || 'https://placehold.co/480x270/181818/333?text=No+Image';
         return `<div class="hero-slide" onclick="goDetail(${JSON.stringify(a).replace(/'/g, '&#39;')})">
-            <img src="${poster}" alt="${a.title}" loading="lazy"
+            <img src="${poster}" alt="${a.title}"
+                 loading="${i === 0 ? 'eager' : 'lazy'}"
+                 decoding="async"
                  onerror="this.src='https://placehold.co/480x270/181818/333?text=No+Image'">
             <div class="hero-slide-overlay"></div>
             <div class="hero-slide-info">
@@ -23,10 +26,14 @@ function renderHero(list) {
             </div>
         </div>`;
     }).join('');
+
     dots.innerHTML = heroAnime.map((_, i) =>
         `<div class="hero-dot ${i === 0 ? 'active' : ''}" onclick="goHero(${i})"></div>`).join('');
+
     updateHeroCounter();
     startHeroAuto();
+    initHeroSwipe(slider);
+    initHeroPauseOnHidden();
 }
 
 function goHero(index) {
@@ -49,6 +56,31 @@ function startHeroAuto() {
         heroTimer = setInterval(() => goHero((heroIndex + 1) % heroAnime.length), 4000);
 }
 function resetHeroAuto() { clearInterval(heroTimer); startHeroAuto(); }
+
+// ── SWIPE SUPPORT ──
+function initHeroSwipe(slider) {
+    let startX = 0, isDragging = false;
+    slider.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+    }, { passive: true });
+    slider.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        isDragging = false;
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) < 40) return; // ignore small swipes
+        if (diff > 0) goHero((heroIndex + 1) % heroAnime.length); // swipe left → next
+        else          goHero((heroIndex - 1 + heroAnime.length) % heroAnime.length); // swipe right → prev
+    }, { passive: true });
+}
+
+// ── PAUSE WHEN TAB HIDDEN ──
+function initHeroPauseOnHidden() {
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) clearInterval(heroTimer);
+        else startHeroAuto();
+    });
+}
 
 // ── RENDER GRID ──
 function renderGrid(gridId, items) {
@@ -73,7 +105,6 @@ async function loadHome() {
     const ongoingGrid  = document.getElementById('ongoing-grid');
     const completeGrid = document.getElementById('complete-grid');
 
-    // Tampilkan skeleton dulu
     if (ongoingGrid)  ongoingGrid.innerHTML  = renderSkeleton(6);
     if (completeGrid) completeGrid.innerHTML = renderSkeleton(6);
 
@@ -89,7 +120,6 @@ async function loadHome() {
 
         const heroSource = ongoingItems.length ? ongoingItems : sections.flatMap(s => s.items || []);
         renderHero(heroSource);
-
         renderGrid('ongoing-grid',  ongoingItems);
         renderGrid('complete-grid', completeItems);
 
