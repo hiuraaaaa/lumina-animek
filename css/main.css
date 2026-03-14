@@ -5,9 +5,9 @@
   --bg2:      #111111;
   --bg3:      #1a1a1a;
   --bg4:      #222222;
-  --accent:   #2563eb;
-  --accent2:  #60a5fa;
-  --accent3:  #1d4ed8;
+  --accent:   #7c3aed;
+  --accent2:  #8b5cf6;
+  --accent3:  #6d28d9;
   --red:      #ef4444;
   --text:     #f0f0f0;
   --text2:    #888888;
@@ -15,7 +15,7 @@
   --border:   rgba(255,255,255,0.06);
   --border2:  rgba(255,255,255,0.1);
   --bottom-nav: 64px;
-  --glow: 0 0 40px rgba(37,99,235,0.15);
+  --glow: 0 0 40px rgba(124,58,237,0.15);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,6 +85,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
+  min-height: calc(100vw * 9 / 16); max-height: 270px;
 }
 .hero-slides {
   display: flex;
@@ -174,8 +175,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 /* ── ANNOUNCEMENT ── */
 .announcement {
   margin: 0 18px 16px;
-  background: rgba(37,99,235,0.08);
-  border: 1px solid rgba(37,99,235,0.2);
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.2);
   border-radius: 0;
   border-left: 3px solid var(--accent);
   padding: 10px 14px;
@@ -284,9 +285,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   border-color: var(--accent);
   color: white;
 }
-.chip:active {
-  background: var(--bg4);
-}
+.chip:active { background: var(--bg4); }
 
 /* ── ANIME GRID ── */
 .anime-grid {
@@ -484,9 +483,7 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   background: transparent;
   transition: background 0.2s;
 }
-.nav-item.active::after {
-  background: var(--accent2);
-}
+.nav-item.active::after { background: var(--accent2); }
 .nav-item svg { width: 20px; height: 20px; stroke-width: 1.8; }
 .nav-item span { font-family: 'Outfit', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 .nav-item.active { color: var(--accent2); }
