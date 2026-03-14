@@ -73,6 +73,10 @@ async function loadHome() {
     const ongoingGrid  = document.getElementById('ongoing-grid');
     const completeGrid = document.getElementById('complete-grid');
 
+    // Tampilkan skeleton dulu
+    if (ongoingGrid)  ongoingGrid.innerHTML  = renderSkeleton(6);
+    if (completeGrid) completeGrid.innerHTML = renderSkeleton(6);
+
     try {
         const data     = await fetchJSON('/api/anime/home');
         const sections = data.sections || [];
