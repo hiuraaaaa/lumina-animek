@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Admin Login — AniStream</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
+    body { display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 0; background: #080808; }
+    .auth-wrap {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; padding: 32px 24px; gap: 24px;
+    }
+    .auth-logo {
+      text-align: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 26px; font-weight: 800; letter-spacing: -0.5px;
+    }
+    .auth-logo span { color: var(--accent2); }
+    .auth-badge {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 800; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--text3);
+      border: 1px solid var(--border); padding: 3px 10px;
+      margin-top: 6px;
+    }
+    .auth-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 0; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .auth-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 800; text-align: center;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--text2);
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 800; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .form-input {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 0; padding: 12px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; color: var(--text);
+      outline: none; width: 100%; transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--accent2); background: var(--bg4); }
+    .form-input::placeholder { color: var(--text3); }
+    .input-wrap { position: relative; }
+    .toggle-pw {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text3); cursor: pointer;
+    }
+    .btn-primary {
+      width: 100%; padding: 13px; background: var(--accent); color: white;
+      border-radius: 0; font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+      border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary:active { background: #1d4ed8; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .divider {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .btn-google {
+      width: 100%; padding: 12px; background: white; color: #1a1a1a;
+      border-radius: 0; font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 800; letter-spacing: 0.3px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-google:active { opacity: 0.9; }
+    .error-msg {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+      border-left: 2px solid #ef4444; border-radius: 0;
+      padding: 10px 12px; font-size: 12px; color: #fca5a5; display: none;
+      font-family: 'DM Sans', sans-serif; line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div style="text-align:center">
+      <div class="auth-logo">ani<span>stream</span></div>
+      <div class="auth-badge">Admin Panel</div>
+    </div>
+
+    <div class="auth-card">
+      <div class="auth-title">Masuk sebagai Admin</div>
+      <div class="error-msg" id="error-msg"></div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" placeholder="admin@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <input type="password" id="login-pw" class="form-input" placeholder="••••••••" style="padding-right:40px">
+          <span class="toggle-pw" id="toggle-pw" onclick="togglePw()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">Masuk</button>
+
+      <div class="divider">atau</div>
+
+      <button class="btn-google" onclick="doGoogle()">
+        <svg width="16" height="16" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Lanjutkan dengan Google
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/js/utils.js"></script>
+  <script src="/js/firebase.js"></script>
+  <script>
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+    }
+    function setLoading(on) {
+      const b = document.getElementById('btn-login');
+      b.disabled = on; b.textContent = on ? 'Memuat...' : 'Masuk';
+    }
+    function togglePw() {
+      const input = document.getElementById('login-pw');
+      const btn   = document.getElementById('toggle-pw');
+      input.type  = input.type === 'password' ? 'text' : 'password';
+      btn.innerHTML = input.type === 'password'
+        ? `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+        : `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+    }
+
+    async function checkAdmin(user) {
+      const res  = await fetch('/api/admin/check', { headers: { 'x-user-email': user.email } });
+      const data = await res.json();
+      return data.isAdmin === true;
+    }
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const pw    = document.getElementById('login-pw').value;
+      if (!email || !pw) return showError('Email dan password wajib diisi');
+      showError(''); setLoading(true);
+      try {
+        const { user } = await FB.signInWithEmailAndPassword(FB.auth, email, pw);
+        const isAdmin  = await checkAdmin(user);
+        if (!isAdmin) { await FB.signOut(FB.auth); return showError('Akun ini tidak memiliki akses admin'); }
+        window.location.href = '/admin';
+      } catch(e) { showError(FB.friendlyError(e.code)); }
+      setLoading(false);
+    }
+
+    async function doGoogle() {
+      showError('');
+      try {
+        const { user } = await FB.signInWithPopup(FB.auth, FB.googleProvider);
+        const isAdmin  = await checkAdmin(user);
+        if (!isAdmin) { await FB.signOut(FB.auth); return showError('Akun ini tidak memiliki akses admin'); }
+        window.location.href = '/admin';
+      } catch(e) { if (e.code !== 'auth/popup-closed-by-user') showError(FB.friendlyError(e.code)); }
+    }
+
+    window.addEventListener('firebase-ready', () => {
+      FB.onAuthStateChanged(FB.auth, async (user) => {
+        if (!user) return;
+        const isAdmin = await checkAdmin(user);
+        if (isAdmin) window.location.href = '/admin';
+      });
+    });
+  </script>
+</body>
+</html>
