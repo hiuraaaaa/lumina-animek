@@ -35,7 +35,7 @@ app.get('/watchlist', (req, res) => res.sendFile(pub('watchlist.html')));
 app.get('/list', (req, res) => res.sendFile(pub('list.html')));
 app.get('/admin',       (req, res) => res.sendFile(pub('admin.html')));
 app.get('/admin/login', (req, res) => res.sendFile(pub('admin-login.html')));
-
+app.get('/contact', (req, res) => res.sendFile(pub('contact.html')));
 //pages
 app.get('/about',   (req, res) => res.sendFile(path.join(__dirname, 'public/pages/about.html')));
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/pages/privacy.html')));
