@@ -6,74 +6,144 @@
   <title>Profil — AniStream</title>
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    .profile-header { padding: 24px 16px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-    .profile-avatar-wrap { position: relative; width: 88px; height: 88px; }
-    .profile-avatar { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent2); }
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
+    .profile-header {
+      padding: 28px 18px 20px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; text-align: center;
+    }
+    .profile-avatar-wrap { position: relative; width: 84px; height: 84px; }
+    .profile-avatar { width: 84px; height: 84px; border-radius: 0; object-fit: cover; border: 2px solid var(--accent2); }
     .avatar-placeholder {
-      width: 88px; height: 88px; border-radius: 50%;
+      width: 84px; height: 84px; border-radius: 0;
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
       display: flex; align-items: center; justify-content: center;
-      font-size: 32px; font-weight: 800; color: white; border: 3px solid var(--accent2);
+      font-family: 'Syne', sans-serif;
+      font-size: 30px; font-weight: 800; color: white;
+      border: 2px solid var(--accent2);
     }
     .avatar-edit-btn {
-      position: absolute; bottom: 0; right: 0;
-      width: 26px; height: 26px; background: var(--accent); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+      position: absolute; bottom: -4px; right: -4px;
+      width: 24px; height: 24px; background: var(--accent);
+      border-radius: 0; display: flex; align-items: center; justify-content: center;
       cursor: pointer; border: 2px solid var(--bg);
     }
-    .profile-name  { font-size: 20px; font-weight: 800; }
-    .profile-email { font-size: 12px; color: var(--text3); margin-top: -8px; }
-    .profile-bio   { font-size: 13px; color: var(--text2); max-width: 280px; line-height: 1.5; }
+    .profile-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .profile-email { font-size: 11px; color: var(--text3); margin-top: -4px; font-family: 'Syne', sans-serif; }
+    .profile-bio { font-size: 12px; color: var(--text2); max-width: 280px; line-height: 1.6; }
+
     .profile-stats {
-      display: flex; margin: 0 16px 20px;
-      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+      display: flex; margin: 0 18px 20px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 0; overflow: hidden;
     }
     .stat-item { flex: 1; padding: 14px 8px; text-align: center; border-right: 1px solid var(--border); }
     .stat-item:last-child { border-right: none; }
-    .stat-num   { font-size: 20px; font-weight: 800; }
-    .stat-label { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 2px; }
-    .profile-menu { margin: 0 16px; display: flex; flex-direction: column; gap: 8px; }
-    .menu-section-title { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin: 8px 0 4px; }
+    .stat-num { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+    .stat-label { font-family: 'Syne', sans-serif; font-size: 9px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; }
+
+    .profile-menu { margin: 0 18px; display: flex; flex-direction: column; gap: 1px; }
+    .menu-section-title { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: 1.2px; margin: 16px 0 8px; }
     .menu-item {
       display: flex; align-items: center; gap: 14px; padding: 14px;
-      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
-      cursor: pointer; transition: background 0.15s;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      border-left: 2px solid transparent;
+      cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
     }
-    .menu-item:active { background: var(--bg3); }
-    .menu-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .menu-item:first-of-type { border-top: 1px solid var(--border); }
+    .menu-item:active { background: var(--bg3); border-left-color: var(--accent2); }
+    .menu-icon { width: 34px; height: 34px; border-radius: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .menu-item-text { flex: 1; }
-    .menu-item-title { font-size: 14px; font-weight: 700; }
-    .menu-item-sub   { font-size: 11px; color: var(--text3); margin-top: 1px; }
-    .menu-arrow { color: var(--text3); }
+    .menu-item-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; }
+    .menu-item-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .menu-arrow { color: var(--text3); flex-shrink: 0; }
+
     .btn-logout {
       width: 100%; padding: 13px;
-      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25);
-      border-radius: 12px; color: #fca5a5; font-size: 14px; font-weight: 700;
-      cursor: pointer; transition: all 0.2s; margin-top: 8px;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 0; font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+      color: #fca5a5; cursor: pointer; transition: all 0.15s; margin-top: 16px;
     }
+    .btn-logout:active { background: rgba(239,68,68,0.15); }
+
+    /* ── COPYRIGHT FOOTER ── */
+    .profile-footer {
+      margin: 28px 18px 0;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .footer-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px; font-weight: 800; letter-spacing: -0.3px;
+      color: var(--text2);
+    }
+    .footer-logo span { color: var(--accent2); }
+    .footer-desc {
+      font-size: 11px; color: var(--text3); line-height: 1.6;
+      max-width: 320px;
+    }
+    .footer-links {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .footer-link {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--text3);
+      padding: 4px 10px; border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .footer-link:active { color: var(--accent2); border-color: var(--accent2); }
+    .footer-copy {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; color: var(--text3);
+      letter-spacing: 0.3px; line-height: 1.6;
+    }
+    .footer-copy span { color: var(--text3); opacity: 0.6; }
+    .footer-disclaimer {
+      font-size: 10px; color: var(--text3); line-height: 1.6;
+      padding: 10px 12px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-left: 2px solid var(--text3);
+    }
+
+    /* ── MODAL ── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px); z-index: 200;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px); z-index: 200;
       display: none; align-items: flex-end; justify-content: center;
     }
     .modal-overlay.show { display: flex; }
     .modal-sheet {
       width: 100%; max-width: 480px; background: var(--bg2);
-      border-radius: 20px 20px 0 0; padding: 20px 20px 40px;
+      border-radius: 0; border-top: 1px solid var(--border);
+      padding: 20px 20px 40px;
       display: flex; flex-direction: column; gap: 16px;
-      animation: slideUp 0.3s ease;
+      animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .modal-handle { width: 40px; height: 4px; background: var(--bg3); border-radius: 2px; margin: 0 auto -4px; }
-    .modal-title  { font-size: 16px; font-weight: 800; text-align: center; }
+    .modal-handle { width: 36px; height: 3px; background: var(--bg4); border-radius: 0; margin: 0 auto -4px; }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 0.3px; }
+    .form-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
     .form-input {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 14px; font-family: inherit; font-size: 14px; color: var(--text);
-      outline: none; width: 100%;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 0;
+      padding: 12px 14px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; color: var(--text); outline: none; width: 100%; transition: border-color 0.15s;
     }
-    .form-input:focus { border-color: var(--accent2); }
-    .spinner { width: 36px; height: 36px; border: 3px solid var(--bg3); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .form-input:focus { border-color: var(--accent2); background: var(--bg4); }
+    .form-input::placeholder { color: var(--text3); }
+    .btn-save-modal {
+      width: 100%; padding: 13px; background: var(--accent); color: white; border-radius: 0;
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+      border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-save-modal:active { background: #1d4ed8; }
+    .btn-save-modal:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .spinner { width: 32px; height: 32px; border: 2.5px solid var(--bg3); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; }
   </style>
 </head>
 <body>
@@ -96,18 +166,19 @@
   </div>
 
   <div id="profile-content" style="display:none;padding-bottom:calc(var(--bottom-nav) + 16px)">
+
     <div class="profile-header">
       <div class="profile-avatar-wrap">
         <div id="avatar-display"></div>
         <div class="avatar-edit-btn" onclick="showEditModal()">
-          <svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+          <svg width="11" height="11" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
             <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
           </svg>
         </div>
       </div>
-      <div class="profile-name" id="profile-name">–</div>
+      <div class="profile-name"  id="profile-name">–</div>
       <div class="profile-email" id="profile-email">–</div>
-      <div class="profile-bio" id="profile-bio" style="display:none"></div>
+      <div class="profile-bio"   id="profile-bio" style="display:none"></div>
     </div>
 
     <div class="profile-stats">
@@ -118,33 +189,64 @@
 
     <div class="profile-menu">
       <div class="menu-section-title">Aktivitas</div>
+
       <div class="menu-item" onclick="window.location.href='/watchlist'">
-        <div class="menu-icon" style="background:rgba(37,99,235,0.15)">
-          <svg width="18" height="18" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        <div class="menu-icon" style="background:rgba(37,99,235,0.12)">
+          <svg width="17" height="17" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         </div>
-        <div class="menu-item-text"><div class="menu-item-title">Watchlist</div><div class="menu-item-sub">Anime yang kamu simpan</div></div>
-        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Watchlist</div>
+          <div class="menu-item-sub">Anime yang kamu simpan</div>
+        </div>
+        <svg class="menu-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
       </div>
 
       <div class="menu-item" onclick="showToast('Segera hadir!')">
-        <div class="menu-icon" style="background:rgba(34,197,94,0.15)">
-          <svg width="18" height="18" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <div class="menu-icon" style="background:rgba(34,197,94,0.1)">
+          <svg width="17" height="17" fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
         </div>
-        <div class="menu-item-text"><div class="menu-item-title">Riwayat Tonton</div><div class="menu-item-sub">Episode yang pernah kamu tonton</div></div>
-        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Riwayat Tonton</div>
+          <div class="menu-item-sub">Episode yang pernah kamu tonton</div>
+        </div>
+        <svg class="menu-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
       </div>
 
       <div class="menu-section-title">Pengaturan</div>
+
       <div class="menu-item" onclick="showEditModal()">
-        <div class="menu-icon" style="background:rgba(168,85,247,0.15)">
-          <svg width="18" height="18" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="menu-icon" style="background:rgba(168,85,247,0.1)">
+          <svg width="17" height="17" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <div class="menu-item-text"><div class="menu-item-title">Edit Profil</div><div class="menu-item-sub">Ubah nama dan bio</div></div>
-        <svg class="menu-arrow" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
+        <div class="menu-item-text">
+          <div class="menu-item-title">Edit Profil</div>
+          <div class="menu-item-sub">Ubah nama dan bio</div>
+        </div>
+        <svg class="menu-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9,18 15,12 9,6"/></svg>
       </div>
 
       <button class="btn-logout" onclick="doLogout()">Keluar dari Akun</button>
     </div>
+
+    <!-- COPYRIGHT FOOTER -->
+    <div class="profile-footer">
+      <div class="footer-logo">ani<span>stream</span></div>
+      <div class="footer-desc">Platform streaming anime subtitle Indonesia. Semua konten tersedia gratis untuk dinikmati.</div>
+      <div class="footer-links">
+        <span class="footer-link" onclick="showToast('Segera hadir!')">Tentang</span>
+        <span class="footer-link" onclick="showToast('Segera hadir!')">Kebijakan Privasi</span>
+        <span class="footer-link" onclick="showToast('Segera hadir!')">Syarat & Ketentuan</span>
+        <span class="footer-link" onclick="showToast('Segera hadir!')">Hubungi Kami</span>
+      </div>
+      <div class="footer-disclaimer">
+        Situs ini tidak menyimpan file video apapun di servernya. Semua konten disematkan dari pihak ketiga. Jika ada konten yang melanggar hak cipta, hubungi kami untuk penghapusan.
+      </div>
+      <div class="footer-copy">
+        © <span id="footer-year"></span> AniStream. Dibuat dengan ♥ untuk para wibu Indonesia.<br>
+        <span>v1.0.0 — All rights reserved.</span>
+      </div>
+    </div>
+
   </div>
 
   <!-- EDIT MODAL -->
@@ -153,48 +255,38 @@
       <div class="modal-handle"></div>
       <div class="modal-title">Edit Profil</div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Nama</label>
+        <label class="form-label">Nama</label>
         <input type="text" id="edit-name" class="form-input" placeholder="Nama kamu">
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        <label style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">Bio</label>
+        <label class="form-label">Bio</label>
         <textarea id="edit-bio" rows="3" class="form-input" placeholder="Ceritain dirimu..." style="resize:none"></textarea>
       </div>
-      <button id="btn-save" onclick="saveProfile()"
-              style="width:100%;padding:13px;background:var(--accent);color:white;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer">
-        Simpan
-      </button>
+      <button class="btn-save-modal" id="btn-save" onclick="saveProfile()">Simpan</button>
     </div>
   </div>
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <div class="nav-item" onclick="window.location.href='/'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
-      </svg><span>Beranda</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span>Beranda</span>
     </div>
     <div class="nav-item" onclick="window.location.href='/genre'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg><span>Genre</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Genre</span>
     </div>
     <div class="nav-item" onclick="window.location.href='/schedule'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="3" y="4" width="18" height="18" rx="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg><span>Jadwal</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Jadwal</span>
     </div>
     <div class="nav-item" onclick="window.location.href='/watchlist'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-      </svg><span>Tersimpan</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      <span>Tersimpan</span>
     </div>
     <div class="nav-item active" onclick="window.location.href='/profile'">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-      </svg><span>Profil</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profil</span>
     </div>
   </nav>
 
@@ -202,6 +294,8 @@
   <script src="/js/utils.js"></script>
   <script src="/js/firebase.js"></script>
   <script>
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
     let currentUser = null, currentProfile = null;
 
     window.addEventListener('firebase-ready', () => {
