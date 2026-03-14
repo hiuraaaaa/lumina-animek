@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Admin Dashboard — AniStream</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    * { -webkit-user-select: none; user-select: none; }
+    input, textarea { -webkit-user-select: text; user-select: text; }
+
+    body { background: #080808; padding-bottom: 24px; }
+
+    /* ── TOPNAV ── */
+    .admin-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(8,8,8,0.95);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(20px);
+    }
+    .admin-nav-logo { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .admin-nav-logo span { color: var(--accent2); }
+    .admin-badge {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--accent2);
+      border: 1px solid rgba(96,165,250,0.3);
+      padding: 2px 8px; border-radius: 0;
+    }
+    .btn-logout-nav {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; color: #fca5a5;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+      padding: 6px 12px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-logout-nav:active { background: rgba(239,68,68,0.15); }
+
+    /* ── SECTION ── */
+    .admin-section { padding: 20px 18px 0; }
+    .admin-section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 800; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .admin-section-title::before {
+      content: ''; width: 3px; height: 13px;
+      background: var(--accent2); border-radius: 0;
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      padding: 16px; border-radius: 0;
+      border-left: 2px solid var(--border);
+      transition: border-color 0.15s;
+    }
+    .stat-card.blue   { border-left-color: var(--accent2); }
+    .stat-card.green  { border-left-color: #22c55e; }
+    .stat-card.purple { border-left-color: #a855f7; }
+    .stat-card.yellow { border-left-color: #fbbf24; }
+
+    .stat-card-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .stat-card-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px; font-weight: 800; color: var(--text);
+      line-height: 1;
+    }
+    .stat-card-sub {
+      font-size: 10px; color: var(--text3); margin-top: 4px;
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* ── TABLE ── */
+    .admin-table {
+      width: 100%; border-collapse: collapse;
+    }
+    .admin-table th {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 800; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 8px 12px; text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .admin-table td {
+      padding: 11px 12px; font-size: 12px; color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:active td { background: var(--bg3); }
+
+    .user-avatar-sm {
+      width: 28px; height: 28px; border-radius: 0;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800; color: white;
+      flex-shrink: 0; vertical-align: middle; margin-right: 8px;
+    }
+    .user-name { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--text); }
+    .user-email { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+    .badge-active {
+      font-family: 'Syne', sans-serif;
+      font-size: 8px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; padding: 2px 7px;
+      background: rgba(34,197,94,0.12); color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.2); border-radius: 0;
+    }
+    .badge-inactive {
+      font-family: 'Syne', sans-serif;
+      font-size: 8px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; padding: 2px 7px;
+      background: var(--bg3); color: var(--text3);
+      border: 1px solid var(--border); border-radius: 0;
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .btn-action {
+      font-family: 'Syne', sans-serif;
+      font-size: 9px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; padding: 4px 10px;
+      border: 1px solid var(--border); background: var(--bg3);
+      color: var(--text2); cursor: pointer; transition: all 0.15s;
+    }
+    .btn-action:active { background: var(--bg4); }
+    .btn-action.danger { color: #fca5a5; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+
+    /* ── POPULAR LIST ── */
+    .popular-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    .popular-item:first-child { border-top: 1px solid var(--border); }
+    .popular-rank {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 800; color: var(--text3);
+      width: 20px; text-align: center; flex-shrink: 0;
+    }
+    .popular-rank.top { color: var(--accent2); }
+    .popular-title {
+      flex: 1; font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .popular-count {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 700; color: var(--text3);
+      flex-shrink: 0;
+    }
+
+    /* ── USER DETAIL MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(6px); z-index: 200;
+      display: none; align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-sheet {
+      width: 100%; max-width: 480px; background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 20px 20px 40px;
+      display: flex; flex-direction: column; gap: 14px;
+      animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1);
+      max-height: 80vh; overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-handle { width: 36px; height: 3px; background: var(--bg4); margin: 0 auto -4px; }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; }
+    .detail-row-value { color: var(--text2); font-size: 12px; text-align: right; max-width: 60%; }
+
+    /* ── SPINNER ── */
+    .spinner { width: 24px; height: 24px; border: 2px solid var(--bg3); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 20px auto; }
+
+    /* ── SKELETON ── */
+    .sk-line { height: 10px; background: var(--bg3); border-radius: 0; animation: pulse 1.4s ease-in-out infinite; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <nav class="admin-nav">
+    <div>
+      <div class="admin-nav-logo">ani<span>stream</span></div>
+    </div>
+    <div class="admin-badge">Admin</div>
+    <button class="btn-logout-nav" onclick="doLogout()">Keluar</button>
+  </nav>
+
+  <!-- LOADING STATE -->
+  <div id="page-loading" style="display:flex;align-items:center;justify-content:center;height:60vh">
+    <div class="spinner" style="width:32px;height:32px"></div>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div id="dashboard" style="display:none">
+
+    <!-- MONITORING -->
+    <div class="admin-section">
+      <div class="admin-section-title">Monitoring</div>
+      <div class="stat-grid">
+        <div class="stat-card blue">
+          <div class="stat-card-label">Total User</div>
+          <div class="stat-card-value" id="stat-users">–</div>
+          <div class="stat-card-sub">Terdaftar</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-card-label">Episode Ditonton</div>
+          <div class="stat-card-value" id="stat-watched">–</div>
+          <div class="stat-card-sub">Total semua user</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-card-label">Watchlist</div>
+          <div class="stat-card-value" id="stat-watchlist">–</div>
+          <div class="stat-card-sub">Total tersimpan</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-card-label">User Aktif</div>
+          <div class="stat-card-value" id="stat-active">–</div>
+          <div class="stat-card-sub">Punya history</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANIME POPULER -->
+    <div class="admin-section">
+      <div class="admin-section-title">Anime Terpopuler</div>
+      <div id="popular-list">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- MANAJEMEN USER -->
+    <div class="admin-section" style="padding-bottom:24px">
+      <div class="admin-section-title" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="width:3px;height:13px;background:var(--accent2);display:inline-block"></span>
+          Manajemen User
+        </span>
+        <span id="user-count" style="font-family:'Syne',sans-serif;font-size:10px;color:var(--text3);font-weight:700"></span>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);overflow:hidden">
+        <div id="user-table-wrap">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- USER DETAIL MODAL -->
+  <div class="modal-overlay" id="user-modal" onclick="closeModal(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-username">Detail User</div>
+      <div id="modal-body"></div>
+      <button class="btn-action danger" id="btn-ban" onclick="banUser()" style="width:100%;padding:12px">
+        Ban User
+      </button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="/js/utils.js"></script>
+  <script src="/js/firebase.js"></script>
+  <script>
+    let currentAdminUser = null;
+    let allUsers = [];
+    let selectedUser = null;
+
+    // ── AUTH CHECK ──
+    window.addEventListener('firebase-ready', () => {
+      FB.onAuthStateChanged(FB.auth, async (user) => {
+        if (!user) { window.location.href = '/admin/login'; return; }
+        const res  = await fetch('/api/admin/check', { headers: { 'x-user-email': user.email } });
+        const data = await res.json();
+        if (!data.isAdmin) { await FB.signOut(FB.auth); window.location.href = '/admin/login'; return; }
+        currentAdminUser = user;
+        document.getElementById('page-loading').style.display = 'none';
+        document.getElementById('dashboard').style.display    = 'block';
+        loadDashboard();
+      });
+    });
+
+    // ── LOAD DASHBOARD ──
+    async function loadDashboard() {
+      await Promise.all([loadStats(), loadUsers()]);
+    }
+
+    async function loadStats() {
+      try {
+        const res  = await fetch('/api/admin/stats', { headers: { 'x-user-email': currentAdminUser.email } });
+        const data = await res.json();
+        if (!data.status) return;
+        const s = data.stats;
+        document.getElementById('stat-users').textContent     = s.totalUsers || 0;
+        document.getElementById('stat-watched').textContent   = s.totalWatched || 0;
+        document.getElementById('stat-watchlist').textContent = s.totalWatchlist || 0;
+        document.getElementById('stat-active').textContent    = s.activeUsers || 0;
+        renderPopular(s.popularAnime || []);
+      } catch(e) { showToast('Gagal load stats'); }
+    }
+
+    function renderPopular(list) {
+      const wrap = document.getElementById('popular-list');
+      if (!list.length) { wrap.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--text3);text-align:center">Belum ada data</div>'; return; }
+      wrap.innerHTML = list.slice(0, 10).map((item, i) => `
+        <div class="popular-item">
+          <span class="popular-rank ${i < 3 ? 'top' : ''}">${i + 1}</span>
+          <span class="popular-title">${escHtml(item.title)}</span>
+          <span class="popular-count">${item.count}x</span>
+        </div>
+      `).join('');
+    }
+
+    async function loadUsers() {
+      try {
+        const res  = await fetch('/api/admin/users', { headers: { 'x-user-email': currentAdminUser.email } });
+        const data = await res.json();
+        if (!data.status) return;
+        allUsers = data.users || [];
+        document.getElementById('user-count').textContent = allUsers.length + ' user';
+        renderUserTable(allUsers);
+      } catch(e) { showToast('Gagal load users'); }
+    }
+
+    function renderUserTable(users) {
+      const wrap = document.getElementById('user-table-wrap');
+      if (!users.length) { wrap.innerHTML = '<div style="padding:16px;font-size:12px;color:var(--text3);text-align:center">Tidak ada user</div>'; return; }
+      wrap.innerHTML = `
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Ditonton</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center">
+                    <span class="user-avatar-sm">${(u.displayName || u.email || '?')[0].toUpperCase()}</span>
+                    <div>
+                      <div class="user-name">${escHtml(u.displayName || 'Anon')}</div>
+                      <div class="user-email">${escHtml(u.email || '')}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-family:'Syne',sans-serif;font-weight:700">${u.watchedCount || 0}</td>
+                <td><span class="${u.banned ? 'badge-inactive' : 'badge-active'}">${u.banned ? 'Banned' : 'Aktif'}</span></td>
+                <td><button class="btn-action" onclick="showUserDetail('${u.uid}')">Detail</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function showUserDetail(uid) {
+      selectedUser = allUsers.find(u => u.uid === uid);
+      if (!selectedUser) return;
+      const u = selectedUser;
+      document.getElementById('modal-username').textContent = u.displayName || 'Anon';
+      const joinDate = u.createdAt?.seconds ? new Date(u.createdAt.seconds * 1000).toLocaleDateString('id-ID') : '–';
+      document.getElementById('modal-body').innerHTML = `
+        <div class="detail-row"><span class="detail-row-label">Email</span><span class="detail-row-value">${escHtml(u.email || '–')}</span></div>
+        <div class="detail-row"><span class="detail-row-label">UID</span><span class="detail-row-value" style="font-size:10px;word-break:break-all">${u.uid}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Bergabung</span><span class="detail-row-value">${joinDate}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Episode Ditonton</span><span class="detail-row-value">${u.watchedCount || 0}</span></div>
+        <div class="detail-row"><span class="detail-row-label">Watchlist</span><span class="detail-row-value">${u.watchlist?.length || 0} anime</span></div>
+        <div class="detail-row"><span class="detail-row-label">Status</span><span class="detail-row-value"><span class="${u.banned ? 'badge-inactive' : 'badge-active'}">${u.banned ? 'Banned' : 'Aktif'}</span></span></div>
+        <div class="detail-row"><span class="detail-row-label">Bio</span><span class="detail-row-value">${escHtml(u.bio || '–')}</span></div>
+      `;
+      const banBtn = document.getElementById('btn-ban');
+      banBtn.textContent = u.banned ? 'Unban User' : 'Ban User';
+      banBtn.className   = u.banned ? 'btn-action' : 'btn-action danger';
+      banBtn.style.width = '100%'; banBtn.style.padding = '12px';
+      document.getElementById('user-modal').classList.add('show');
+    }
+
+    async function banUser() {
+      if (!selectedUser) return;
+      const newBanned = !selectedUser.banned;
+      const confirmMsg = newBanned ? `Ban ${selectedUser.displayName || selectedUser.email}?` : `Unban ${selectedUser.displayName || selectedUser.email}?`;
+      if (!confirm(confirmMsg)) return;
+      try {
+        await FB.updateUserProfile(selectedUser.uid, { banned: newBanned });
+        selectedUser.banned = newBanned;
+        allUsers = allUsers.map(u => u.uid === selectedUser.uid ? { ...u, banned: newBanned } : u);
+        renderUserTable(allUsers);
+        closeModal({ target: null });
+        showToast(newBanned ? 'User berhasil dibanned' : 'User berhasil diunban');
+      } catch(e) { showToast('Gagal: ' + e.message); }
+    }
+
+    function closeModal(e) {
+      if (!e.target || e.target === document.getElementById('user-modal'))
+        document.getElementById('user-modal').classList.remove('show');
+    }
+
+    async function doLogout() {
+      await FB.signOut(FB.auth);
+      window.location.href = '/admin/login';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
+
