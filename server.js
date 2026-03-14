@@ -16,6 +16,7 @@ app.use('/js',     express.static(path.join(__dirname, 'js')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.use('/api/anime', require('./api/anime'));
+app.use('/api/admin', require('./api/admin'));
 
 const pub = (file) => path.join(__dirname, 'public', file);
 
@@ -29,7 +30,8 @@ app.get('/login',     (req, res) => res.sendFile(pub('login.html')));
 app.get('/profile',   (req, res) => res.sendFile(pub('profile.html')));
 app.get('/watchlist', (req, res) => res.sendFile(pub('watchlist.html')));
 app.get('/list', (req, res) => res.sendFile(pub('list.html')));
-
+app.get('/admin',       (req, res) => res.sendFile(pub('admin.html')));
+app.get('/admin/login', (req, res) => res.sendFile(pub('admin-login.html')));
 app.use((req, res) => res.status(404).json({ status: false, message: 'Not Found' }));
 
 if (require.main === module) {
