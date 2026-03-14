@@ -6,6 +6,7 @@ let   epSort      = 'desc';
 let   epPage      = 1;
 const EP_PER_PAGE = 50;
 let   allEps      = [];
+let   _currentAnime = null; // untuk watchlist
 
 function toAnimeSlug(slug) {
     return slug.replace(/-episode-.*/i, '')
@@ -45,7 +46,7 @@ function renderDetail(data) {
     const d    = data.detail;
     const info = d.info || {};
 
-    document.title = `${d.title} — AniStream`;
+    document.title = `${d.title} — LunarStream`;
 
     const heroBg = document.getElementById('hero-bg');
     if (heroBg) heroBg.style.backgroundImage = `url('${esc(d.cover || d.poster)}')`;
@@ -132,7 +133,77 @@ function renderDetail(data) {
     renderEpisodes();
     updateWatchBtn();
     renderRecommendations(d.recommendations || []);
+
+    // simpan data anime untuk watchlist
+    _currentAnime = {
+        slug:   ANIME_SLUG,
+        title:  d.title  || '',
+        cover:  d.cover  || d.poster || '',
+        poster: d.poster || d.cover  || '',
+        url:    d.url    || '',
+    };
+    window.currentAnimeSlug = ANIME_SLUG;
+    window.currentAnimeData = d;
+
+    // init watchlist button setelah firebase ready
+    initWatchlistBtn();
 }
+
+// ── WATCHLIST ──
+function initWatchlistBtn() {
+    const doInit = () => {
+        if (!window.FB) return;
+        FB.onAuthStateChanged(FB.auth, async (user) => {
+            if (!user) return; // tidak login = tombol tetap default
+            const profile = await FB.getUserProfile(user.uid);
+            const list    = profile?.watchlist || [];
+            const saved   = list.some(a => a.slug === ANIME_SLUG);
+            updateSaveBtn(saved);
+        });
+    };
+    if (window.FB) doInit();
+    else window.addEventListener('firebase-ready', doInit, { once: true });
+}
+
+function updateSaveBtn(saved) {
+    const btn = document.getElementById('btn-save');
+    if (!btn) return;
+    btn.classList.toggle('saved', saved);
+    btn.innerHTML = saved
+        ? `<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
+        : `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`;
+}
+
+window.toggleWatchlist = async function() {
+    if (!window.FB) return showToast('Memuat...');
+
+    const user = FB.auth.currentUser;
+    if (!user) {
+        window.location.href = '/login';
+        return;
+    }
+    if (!_currentAnime) return;
+
+    try {
+        const profile  = await FB.getUserProfile(user.uid);
+        const list     = profile?.watchlist || [];
+        const idx      = list.findIndex(a => a.slug === ANIME_SLUG);
+        const isSaved  = idx >= 0;
+
+        let newList;
+        if (isSaved) {
+            newList = list.filter(a => a.slug !== ANIME_SLUG);
+        } else {
+            newList = [_currentAnime, ...list];
+        }
+
+        await FB.updateUserProfile(user.uid, { watchlist: newList });
+        updateSaveBtn(!isSaved);
+        showToast(isSaved ? 'Dihapus dari watchlist' : 'Ditambahkan ke watchlist!');
+    } catch(e) {
+        showToast('Gagal: ' + e.message);
+    }
+};
 
 function setText(id, val) {
     const el = document.getElementById(id);
@@ -274,8 +345,6 @@ async function init() {
         const data = await fetchDetail(ANIME_SLUG);
         hideSkeleton();
         renderDetail(data);
-        window.currentAnimeSlug = ANIME_SLUG;
-        window.currentAnimeData = data.detail;
     } catch (err) {
         hideSkeleton();
         const ct = document.getElementById('detail-content');
@@ -289,7 +358,7 @@ async function init() {
                 <h3>Gagal Memuat</h3>
                 <p>${esc(err.message)}</p>
                 <small style="color:var(--text3);display:block;margin-top:8px">Slug: ${esc(ANIME_SLUG)}</small>
-                <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">← Kembali</button>
+                <button onclick="history.back()" style="margin-top:16px;padding:8px 20px;background:var(--accent);color:white;border:none;font-size:13px;font-weight:600;cursor:pointer">← Kembali</button>
             </div>`;
     }
 }
