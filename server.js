@@ -20,6 +20,7 @@ app.use('/api/admin', require('./api/admin'));
 
 const pub = (file) => path.join(__dirname, 'public', file);
 
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'assets', 'favicon.ico')));
 app.get('/',          (req, res) => res.sendFile(pub('index.html')));
 app.get('/search',    (req, res) => res.sendFile(pub('search.html')));
 app.get('/detail',    (req, res) => res.sendFile(pub('detail.html')));
