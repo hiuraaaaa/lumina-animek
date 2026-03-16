@@ -3,135 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Login — AniStream</title>
+  <title>Login — LunarStream</title>
+  <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
   <link rel="stylesheet" href="/css/main.css">
   <style>
     * { -webkit-user-select: none; user-select: none; }
     input, textarea { -webkit-user-select: text; user-select: text; }
 
     body { display:flex; flex-direction:column; min-height:100vh; padding-bottom:0; }
+    .auth-wrap { flex:1; display:flex; flex-direction:column; justify-content:center; padding:32px 24px; gap:24px; }
 
-    .auth-wrap {
-      flex:1; display:flex; flex-direction:column;
-      justify-content:center; padding:32px 24px; gap:24px;
-    }
-
-    /* ── LOGO ── */
-    .auth-logo {
-      text-align:center;
-      font-family:'Syne', sans-serif;
-      font-size:30px; font-weight:800; letter-spacing:-0.5px;
-    }
+    .auth-logo { text-align:center; font-family:'Outfit', sans-serif; font-size:30px; font-weight:800; letter-spacing:-0.5px; display:flex; align-items:center; justify-content:center; gap:0; }
+    .auth-logo svg { color:var(--accent2); margin-right:6px; }
     .auth-logo span { color:var(--accent2); }
-    .auth-subtitle {
-      text-align:center; font-size:11px; color:var(--text3);
-      margin-top:-14px; letter-spacing:0.3px;
-      font-family:'Syne', sans-serif; text-transform:uppercase;
-    }
+    .auth-subtitle { text-align:center; font-size:11px; color:var(--text3); margin-top:-14px; letter-spacing:0.3px; font-family:'Outfit', sans-serif; text-transform:uppercase; }
 
-    /* ── CARD ── */
-    .auth-card {
-      background:var(--bg2); border:1px solid var(--border);
-      border-radius:0; padding:24px;
-      display:flex; flex-direction:column; gap:16px;
-    }
+    .auth-card { background:var(--bg2); border:1px solid var(--border); border-radius:0; padding:24px; display:flex; flex-direction:column; gap:16px; }
 
-    /* ── TABS ── */
-    .auth-tabs {
-      display:flex; background:var(--bg3);
-      border-radius:0; padding:3px; gap:3px;
-    }
-    .auth-tab {
-      flex:1; padding:9px; border-radius:0;
-      font-family:'Syne', sans-serif;
-      font-size:11px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
-      color:var(--text3); text-align:center; cursor:pointer; transition:all 0.15s;
-    }
-    .auth-tab.active {
-      background:var(--bg2); color:var(--text);
-      box-shadow:0 1px 4px rgba(0,0,0,0.3);
-    }
+    .auth-tabs { display:flex; background:var(--bg3); border-radius:0; padding:3px; gap:3px; }
+    .auth-tab { flex:1; padding:9px; border-radius:0; font-family:'Outfit', sans-serif; font-size:11px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--text3); text-align:center; cursor:pointer; transition:all 0.15s; }
+    .auth-tab.active { background:var(--bg2); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
 
-    /* ── FORM ── */
     .form-group { display:flex; flex-direction:column; gap:6px; }
-    .form-label {
-      font-family:'Syne', sans-serif;
-      font-size:10px; font-weight:800; color:var(--text3);
-      text-transform:uppercase; letter-spacing:1px;
-    }
-    .form-input {
-      background:var(--bg3); border:1px solid var(--border);
-      border-radius:0; padding:12px 14px;
-      font-family:'DM Sans', sans-serif;
-      font-size:14px; color:var(--text);
-      outline:none; width:100%; transition:border-color 0.15s;
-    }
+    .form-label { font-family:'Outfit', sans-serif; font-size:10px; font-weight:800; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+    .form-input { background:var(--bg3); border:1px solid var(--border); border-radius:0; padding:12px 14px; font-family:'DM Sans', sans-serif; font-size:14px; color:var(--text); outline:none; width:100%; transition:border-color 0.15s; }
     .form-input:focus { border-color:var(--accent2); background:var(--bg4); }
     .form-input::placeholder { color:var(--text3); }
 
     .input-wrap { position:relative; }
-    .toggle-pw {
-      position:absolute; right:12px; top:50%; transform:translateY(-50%);
-      color:var(--text3); cursor:pointer; font-size:14px;
-      -webkit-user-select:none; user-select:none;
-    }
+    .toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text3); cursor:pointer; }
 
-    /* ── BUTTONS ── */
-    .btn-primary {
-      width:100%; padding:13px; background:var(--accent); color:white;
-      border-radius:0;
-      font-family:'Syne', sans-serif;
-      font-size:12px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase;
-      border:none; cursor:pointer; transition:all 0.15s;
-    }
-    .btn-primary:active { background:#1d4ed8; }
+    .btn-primary { width:100%; padding:13px; background:var(--accent); color:white; border-radius:0; font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; letter-spacing:0.8px; text-transform:uppercase; border:none; cursor:pointer; transition:all 0.15s; }
+    .btn-primary:active { background:var(--accent3); }
     .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
 
-    .divider {
-      display:flex; align-items:center; gap:10px;
-      font-family:'Syne', sans-serif;
-      font-size:10px; color:var(--text3); letter-spacing:0.5px; text-transform:uppercase;
-    }
+    .divider { display:flex; align-items:center; gap:10px; font-family:'Outfit', sans-serif; font-size:10px; color:var(--text3); letter-spacing:0.5px; text-transform:uppercase; }
     .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    .btn-google {
-      width:100%; padding:12px; background:white; color:#1a1a1a;
-      border-radius:0;
-      font-family:'Syne', sans-serif;
-      font-size:12px; font-weight:800; letter-spacing:0.3px;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      border:none; cursor:pointer; transition:all 0.15s;
-    }
+    .btn-google { width:100%; padding:12px; background:white; color:#1a1a1a; border-radius:0; font-family:'Outfit', sans-serif; font-size:12px; font-weight:800; letter-spacing:0.3px; display:flex; align-items:center; justify-content:center; gap:10px; border:none; cursor:pointer; transition:all 0.15s; }
     .btn-google:active { opacity:0.9; }
 
-    /* ── ERROR ── */
-    .error-msg {
-      background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25);
-      border-left:2px solid #ef4444;
-      border-radius:0; padding:10px 12px;
-      font-size:12px; color:#fca5a5; display:none;
-      font-family:'DM Sans', sans-serif; line-height:1.5;
-    }
+    .error-msg { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); border-left:2px solid #ef4444; border-radius:0; padding:10px 12px; font-size:12px; color:#fca5a5; display:none; font-family:'DM Sans', sans-serif; line-height:1.5; }
 
-    /* ── FOOTER ── */
-    .auth-footer {
-      text-align:center; font-size:11px; color:var(--text3);
-      font-family:'Syne', sans-serif; letter-spacing:0.2px;
-    }
+    .auth-footer { text-align:center; font-size:11px; color:var(--text3); font-family:'Outfit', sans-serif; letter-spacing:0.2px; }
     .auth-footer a { color:var(--accent2); font-weight:700; }
   </style>
 </head>
 <body>
   <div class="auth-wrap">
     <div>
-      <div class="auth-logo">ani<span>stream</span></div>
+      <div class="auth-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" viewBox="0 0 256 256"><path d="M240,96a8,8,0,0,1-8,8H216v16a8,8,0,0,1-16,0V104H184a8,8,0,0,1,0-16h16V72a8,8,0,0,1,16,0V88h16A8,8,0,0,1,240,96ZM144,56h8v8a8,8,0,0,0,16,0V56h8a8,8,0,0,0,0-16h-8V32a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16Zm72.77,97a8,8,0,0,1,1.43,8A96,96,0,1,1,95.07,37.8a8,8,0,0,1,10.6,9.06A88.07,88.07,0,0,0,209.14,150.33,8,8,0,0,1,216.77,153Zm-19.39,14.88c-1.79.09-3.59.14-5.38.14A104.11,104.11,0,0,1,88,64c0-1.79,0-3.59.14-5.38A80,80,0,1,0,197.38,167.86Z"></path></svg>Lunar<span>Stream</span>
+      </div>
       <div class="auth-subtitle">Nonton anime sub indo gratis</div>
     </div>
 
     <div class="auth-card">
       <div class="auth-tabs">
-        <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Masuk</div>
-        <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Daftar</div>
+        <div class="auth-tab active" id="tab-login"    onclick="switchTab('login')">Masuk</div>
+        <div class="auth-tab"        id="tab-register" onclick="switchTab('register')">Daftar</div>
       </div>
 
       <div class="error-msg" id="error-msg"></div>
@@ -189,13 +120,16 @@
       </button>
     </div>
 
-    <div class="auth-footer">Dengan masuk, kamu setuju dengan <a href="#">Syarat & Ketentuan</a></div>
+    <div class="auth-footer">Dengan masuk, kamu setuju dengan <a href="/terms">Syarat & Ketentuan</a></div>
   </div>
 
   <div id="toast" class="toast"></div>
   <script src="/js/utils.js"></script>
   <script src="/js/firebase.js"></script>
   <script>
+    // fix: flag untuk mencegah onAuthStateChanged redirect saat sedang proses auth
+    let _authInProgress = false;
+
     function showError(msg) {
       const el = document.getElementById('error-msg');
       el.textContent = msg; el.style.display = msg ? 'block' : 'none';
@@ -223,17 +157,24 @@
         ? `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
         : `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
     };
+
     window.doLogin = async () => {
       const email = document.getElementById('login-email').value.trim();
       const pw    = document.getElementById('login-pw').value;
       if (!email || !pw) return showError('Email dan password wajib diisi');
       showError(''); setLoading('btn-login', true);
+      _authInProgress = true;
       try {
         const { user } = await FB.signInWithEmailAndPassword(FB.auth, email, pw);
-        await FB.createUserProfile(user);
+        await FB.createUserProfile(user); // tunggu sampai selesai
         goNext();
-      } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-login', false); }
+      } catch(e) {
+        _authInProgress = false;
+        showError(FB.friendlyError(e.code));
+        setLoading('btn-login', false);
+      }
     };
+
     window.doRegister = async () => {
       const name  = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim();
@@ -241,23 +182,37 @@
       if (!name || !email || !pw) return showError('Semua field wajib diisi');
       if (pw.length < 6) return showError('Password minimal 6 karakter');
       showError(''); setLoading('btn-register', true);
+      _authInProgress = true;
       try {
         const { user } = await FB.createUserWithEmailAndPassword(FB.auth, email, pw);
         await FB.updateProfile(user, { displayName: name });
-        await FB.createUserProfile(user, { displayName: name });
+        await FB.createUserProfile(user, { displayName: name }); // tunggu sampai selesai
         goNext();
-      } catch(e) { showError(FB.friendlyError(e.code)); setLoading('btn-register', false); }
+      } catch(e) {
+        _authInProgress = false;
+        showError(FB.friendlyError(e.code));
+        setLoading('btn-register', false);
+      }
     };
+
     window.doGoogle = async () => {
       showError('');
+      _authInProgress = true;
       try {
         const { user } = await FB.signInWithPopup(FB.auth, FB.googleProvider);
-        await FB.createUserProfile(user);
+        await FB.createUserProfile(user); // tunggu sampai selesai
         goNext();
-      } catch(e) { if (e.code !== 'auth/popup-closed-by-user') showError(FB.friendlyError(e.code)); }
+      } catch(e) {
+        _authInProgress = false;
+        if (e.code !== 'auth/popup-closed-by-user') showError(FB.friendlyError(e.code));
+      }
     };
+
+    // fix: hanya redirect kalau tidak sedang proses auth manual
     window.addEventListener('firebase-ready', () => {
-      FB.onAuthStateChanged(FB.auth, user => { if (user) goNext(); });
+      FB.onAuthStateChanged(FB.auth, user => {
+        if (user && !_authInProgress) goNext();
+      });
     });
   </script>
 </body>
