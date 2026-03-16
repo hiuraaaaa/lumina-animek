@@ -45,12 +45,107 @@ async function doSearch(q, page = 1, append = false) {
     }
 }
 
+// ── TRACEMOE SEARCH ──
+async function doImageSearch(file) {
+    const grid    = document.getElementById('search-grid');
+    const countEl = document.getElementById('result-count');
+    const ph      = document.getElementById('search-placeholder');
+    if (ph) ph.style.display = 'none';
+
+    // Show loading
+    grid.innerHTML = `<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px">
+        <div style="width:36px;height:36px;border:2.5px solid var(--bg3);border-top-color:var(--accent2);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+        <div style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--text3)">Mencari anime dari gambar...</div>
+    </div>`;
+    if (countEl) countEl.textContent = '';
+
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res  = await fetch('https://api-lumina-ashy.vercel.app/ai-tools/tracemoe', {
+            method: 'POST',
+            body: formData,
+        });
+        const data = await res.json();
+
+        if (!data.status || !data.result) throw new Error('Tidak ada hasil ditemukan');
+
+        const r = data.result;
+        renderTracemoeResult(r);
+        if (countEl) countEl.textContent = `Ditemukan dari gambar • Similarity ${r.similarity}`;
+
+    } catch(e) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg><h3>Tidak Ditemukan</h3><p>${e.message}</p></div>`;
+    }
+}
+
+function renderTracemoeResult(r) {
+    const grid   = document.getElementById('search-grid');
+    const title  = r.title?.english || r.title?.romaji || r.title?.native || 'Unknown';
+    const romaji = r.title?.romaji || '';
+    const cover  = r.cover || '';
+    const ep     = r.episode ? `Episode ${r.episode}` : '';
+    const genres = (r.genres || []).slice(0, 3).join(', ');
+    const sim    = r.similarity || '';
+
+    // Format timestamp
+    const ts  = Math.floor(r.timestamp || 0);
+    const min = Math.floor(ts / 60);
+    const sec = ts % 60;
+    const timestamp = `${min}:${sec.toString().padStart(2, '0')}`;
+
+    grid.innerHTML = `
+      <div style="grid-column:1/-1">
+        <!-- RESULT CARD -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--accent2);padding:16px;display:flex;gap:14px;margin-bottom:12px">
+          <img src="${escHtml(cover)}" alt="${escHtml(title)}"
+            style="width:80px;aspect-ratio:2/3;object-fit:cover;flex-shrink:0;border:1px solid var(--border)"
+            onerror="this.style.display='none'">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:4px">${escHtml(title)}</div>
+            ${romaji && romaji !== title ? `<div style="font-size:10px;color:var(--text3);margin-bottom:6px">${escHtml(romaji)}</div>` : ''}
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">
+              <span style="font-family:'Outfit',sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;background:rgba(124,58,237,0.15);color:var(--accent2);border:1px solid rgba(124,58,237,0.2)">${escHtml(sim)}</span>
+              ${ep ? `<span style="font-family:'Outfit',sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;padding:2px 7px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)">${escHtml(ep)}</span>` : ''}
+              <span style="font-family:'Outfit',sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;padding:2px 7px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)">${escHtml(timestamp)}</span>
+              ${r.format ? `<span style="font-family:'Outfit',sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;padding:2px 7px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)">${escHtml(r.format)}</span>` : ''}
+            </div>
+            ${genres ? `<div style="font-size:10px;color:var(--text3)">${escHtml(genres)}</div>` : ''}
+          </div>
+        </div>
+
+        <!-- PREVIEW IMAGE -->
+        ${r.preview?.image ? `
+        <div style="margin-bottom:12px">
+          <div style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Preview Scene</div>
+          <img src="${escHtml(r.preview.image)}" alt="preview"
+            style="width:100%;border:1px solid var(--border);display:block"
+            onerror="this.style.display='none'">
+        </div>` : ''}
+
+        <!-- CARI DI LUNARSTREAM -->
+        <button onclick="setSearch('${escHtml(r.title?.romaji || r.title?.english || '')}')"
+          style="width:100%;padding:12px;background:var(--accent);color:white;border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer">
+          Cari di LunarStream
+        </button>
+      </div>
+    `;
+}
+
 function initSearchInput() {
     const input    = document.getElementById('search-input');
     const clearBtn = document.getElementById('search-clear');
     const ph       = document.getElementById('search-placeholder');
+    const camBtn   = document.getElementById('btn-camera');
+    const camInput = document.getElementById('camera-input');
+
     if (!input) return;
     if (currentQ) { input.value = currentQ; if (clearBtn) clearBtn.style.display = 'flex'; if (ph) ph.style.display = 'none'; }
+
     let timer;
     input.addEventListener('input', () => {
         const q = input.value.trim();
@@ -71,6 +166,19 @@ function initSearchInput() {
         history.replaceState(null, '', '/search');
         input.focus();
     });
+
+    // ── CAMERA / IMAGE SEARCH ──
+    camBtn?.addEventListener('click', () => camInput?.click());
+    camInput?.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        // Clear input untuk allow same file again
+        camInput.value = '';
+        // Clear search text
+        input.value = ''; if (clearBtn) clearBtn.style.display = 'none'; currentQ = '';
+        doImageSearch(file);
+    });
+
     input.focus();
 }
 
