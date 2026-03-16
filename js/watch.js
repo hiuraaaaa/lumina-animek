@@ -11,18 +11,55 @@ let _playing   = false;
 
 // ── GUEST LIMIT (3 episode tanpa login) ──
 const GUEST_LIMIT = 3;
-const STORAGE_KEY = 'lunar_watched_guest';
 
-function getGuestWatched() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
-function addGuestWatched(slug) {
-    const list = getGuestWatched();
-    if (!list.includes(slug)) {
-        list.push(slug);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+// ── FINGERPRINT ──
+function getFingerprint() {
+    try {
+        const raw = [
+            navigator.userAgent        || '',
+            navigator.language         || '',
+            navigator.platform         || '',
+            screen.width + 'x' + screen.height,
+            screen.colorDepth          || '',
+            new Date().getTimezoneOffset(),
+            Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+            navigator.hardwareConcurrency || '',
+            navigator.deviceMemory     || '',
+        ].join('|');
+
+        // Simple hash (djb2)
+        let h = 5381;
+        for (let i = 0; i < raw.length; i++) {
+            h = Math.imul(h, 33) ^ raw.charCodeAt(i);
+        }
+        return 'lf_' + Math.abs(h).toString(36);
+    } catch {
+        return 'lf_default';
     }
 }
+
+function getFPKey() { return 'lunar_w_' + getFingerprint(); }
+
+function getGuestWatched() {
+    try {
+        // Cek di localStorage (persist) DAN sessionStorage (per tab)
+        const lsData = JSON.parse(localStorage.getItem(getFPKey())   || '[]');
+        const ssData = JSON.parse(sessionStorage.getItem('lunar_ws') || '[]');
+        // Gabung keduanya (union)
+        return [...new Set([...lsData, ...ssData])];
+    } catch { return []; }
+}
+
+function addGuestWatched(slug) {
+    try {
+        const fpKey  = getFPKey();
+        const lsData = JSON.parse(localStorage.getItem(fpKey)        || '[]');
+        const ssData = JSON.parse(sessionStorage.getItem('lunar_ws') || '[]');
+        if (!lsData.includes(slug)) { lsData.push(slug); localStorage.setItem(fpKey, JSON.stringify(lsData)); }
+        if (!ssData.includes(slug)) { ssData.push(slug); sessionStorage.setItem('lunar_ws', JSON.stringify(ssData)); }
+    } catch {}
+}
+
 function getGuestCount() { return getGuestWatched().length; }
 
 function checkGuestLimit() {
