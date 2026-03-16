@@ -22,6 +22,62 @@
     const db             = getFirestore(app);
     const googleProvider = new GoogleAuthProvider();
 
+    // ── BAN OVERLAY ──
+    function showBanOverlay() {
+        // Jangan tampilkan di halaman login/admin
+        const path = window.location.pathname;
+        if (path.startsWith('/login') || path.startsWith('/admin')) return;
+
+        // Prevent scroll
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width    = '100%';
+
+        const overlay = document.createElement('div');
+        overlay.id = 'ban-overlay';
+        overlay.style.cssText = `
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(8,8,8,0.97);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+            overscroll-behavior: none;
+            touch-action: none;
+        `;
+        overlay.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;max-width:320px">
+                <svg width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                </svg>
+                <div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:#f0f0f0;letter-spacing:-0.3px">
+                    Akun Dibanned
+                </div>
+                <div style="width:32px;height:2px;background:rgba(239,68,68,0.5)"></div>
+                <div style="font-size:13px;color:#888;line-height:1.7">
+                    Akun kamu telah dinonaktifkan oleh admin karena melanggar ketentuan layanan LunarStream.
+                </div>
+                <div style="font-size:11px;color:#444;font-family:'Outfit',sans-serif;padding:10px 14px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.05);border-left:2px solid #ef4444;text-align:left;line-height:1.6">
+                    Jika kamu merasa ini adalah kesalahan, hubungi kami melalui halaman <a href="/contact" style="color:#ef4444;text-decoration:none;font-weight:700">Hubungi Kami</a>.
+                </div>
+                <button onclick="window._doBanLogout()" style="
+                    width:100%; padding:13px; background:rgba(239,68,68,0.1);
+                    color:#fca5a5; border:1px solid rgba(239,68,68,0.3);
+                    font-family:'Outfit',sans-serif; font-size:11px; font-weight:800;
+                    letter-spacing:0.8px; text-transform:uppercase; cursor:pointer;
+                ">Keluar dari Akun</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Logout function
+        window._doBanLogout = async () => {
+            await signOut(auth);
+            window.location.href = '/login';
+        };
+    }
+
     // ── USER PROFILE ──
     async function createUserProfile(user, extra = {}) {
         const ref  = doc(db, 'users', user.uid);
@@ -37,6 +93,7 @@
                 watchedCount: 0,
                 watchHistory: [],
                 bio:          '',
+                banned:       false,
             });
         }
         return (await getDoc(ref)).data();
@@ -53,7 +110,6 @@
 
     // ── TRACK WATCHED EPISODE ──
     async function trackWatchedEpisode(uid, episode) {
-        // episode = { slug, title, seriesName, seriesUrl }
         try {
             const ref  = doc(db, 'users', uid);
             const snap = await getDoc(ref);
@@ -63,7 +119,6 @@
             const history     = data.watchHistory || [];
             const alreadySeen = history.some(h => h.slug === episode.slug);
 
-            // Update timestamp kalau sudah ada, tambah baru kalau belum
             const newHistory = alreadySeen
                 ? history.map(h => h.slug === episode.slug
                     ? { ...h, watchedAt: Date.now() }
@@ -95,9 +150,27 @@
         return map[code] || 'Terjadi kesalahan, coba lagi';
     }
 
+    // ── WRAPPED onAuthStateChanged — auto check banned ──
+    function _onAuthStateChanged(authInstance, callback) {
+        return onAuthStateChanged(authInstance, async (user) => {
+            if (user) {
+                try {
+                    const profile = await getUserProfile(user.uid);
+                    if (profile?.banned === true) {
+                        showBanOverlay();
+                        return; // jangan panggil callback
+                    }
+                } catch(e) {
+                    console.warn('ban check error:', e.message);
+                }
+            }
+            callback(user);
+        });
+    }
+
     window.FB = {
         auth, db, googleProvider,
-        onAuthStateChanged,
+        onAuthStateChanged: _onAuthStateChanged,
         signInWithEmailAndPassword,
         createUserWithEmailAndPassword,
         signInWithPopup,
