@@ -167,8 +167,9 @@
     /* ── USER DETAIL MODAL ── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(6px); z-index: 200;
-      display: none; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      z-index: 200; display: none; align-items: flex-end; justify-content: center;
+      overscroll-behavior: none; touch-action: none;
     }
     .modal-overlay.show { display: flex; }
     .modal-sheet {
@@ -412,6 +413,9 @@
       banBtn.textContent = u.banned ? 'Unban User' : 'Ban User';
       banBtn.className   = u.banned ? 'btn-action' : 'btn-action danger';
       banBtn.style.width = '100%'; banBtn.style.padding = '12px';
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width    = '100%';
       document.getElementById('user-modal').classList.add('show');
     }
 
@@ -426,13 +430,20 @@
         allUsers = allUsers.map(u => u.uid === selectedUser.uid ? { ...u, banned: newBanned } : u);
         renderUserTable(allUsers);
         closeModal({ target: null });
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width    = '';
         showToast(newBanned ? 'User berhasil dibanned' : 'User berhasil diunban');
       } catch(e) { showToast('Gagal: ' + e.message); }
     }
 
     function closeModal(e) {
-      if (!e.target || e.target === document.getElementById('user-modal'))
+      if (!e.target || e.target === document.getElementById('user-modal')) {
         document.getElementById('user-modal').classList.remove('show');
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width    = '';
+      }
     }
 
     async function doLogout() {
