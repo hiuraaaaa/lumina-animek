@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>LunarStream — Nonton Anime Sub Indo Gratis</title>
-
   <!-- ── THEME INIT (no flicker) ── -->
-  <script src="/js/theme-init.js"><\/script>
 
   <!-- ── FAVICON ── -->
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
@@ -293,17 +291,12 @@
     window.addEventListener('firebase-ready', () => {
       FB.onAuthStateChanged(FB.auth, async (user) => {
         if (!user) return;
-        try {
-          const { collection, query, orderBy, getDocs, where } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-          const q    = query(collection(FB.db, 'notifications', user.uid, 'items'), where('read', '==', false));
-          const snap = await getDocs(q);
-          const count = snap.size;
-          const badge = document.getElementById('notif-badge');
-          if (badge && count > 0) {
-            badge.textContent   = count > 9 ? '9+' : count;
-            badge.style.display = 'flex';
-          }
-        } catch(e) {}
+        const count = await FB.getUnreadCount(user.uid);
+        const badge = document.getElementById('notif-badge');
+        if (badge && count > 0) {
+          badge.textContent   = count > 9 ? '9+' : count;
+          badge.style.display = 'flex';
+        }
       });
     });
   </script>
