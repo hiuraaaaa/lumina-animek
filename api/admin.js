@@ -30,7 +30,6 @@ function requireAdmin(req, res, next) {
 // ── HELPER: serialize Firestore Timestamp → ISO string ──
 function serializeUser(data) {
     const { watchHistory, ...safe } = data;
-    // fix: convert Firestore Timestamp ke ISO string biar JSON-able
     if (safe.createdAt && typeof safe.createdAt.toDate === 'function') {
         safe.createdAt = safe.createdAt.toDate().toISOString();
     }
@@ -54,7 +53,6 @@ router.get('/stats', requireAdmin, async (req, res) => {
         const totalWatchlist = users.reduce((sum, u) => sum + (u.watchlist?.length || 0), 0);
         const activeUsers    = users.filter(u => (u.watchHistory?.length || 0) > 0).length;
 
-        // Popular anime dari watchHistory semua user
         const animeCount = {};
         for (const u of users) {
             for (const h of (u.watchHistory || [])) {
@@ -74,19 +72,47 @@ router.get('/stats', requireAdmin, async (req, res) => {
 // ── LIST USERS ──
 router.get('/users', requireAdmin, async (req, res) => {
     try {
-        // fix: hapus orderBy — dokumen tanpa createdAt akan di-skip oleh Firestore
-        // sort di JS aja biar semua user masuk
         const snapshot = await db.collection('users').get();
         const users    = snapshot.docs
             .map(d => serializeUser(d.data()))
             .sort((a, b) => {
-                // sort by createdAt desc, null/undefined di bawah
                 const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
                 const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                 return tb - ta;
             });
-
         res.json({ status: true, users });
+    } catch(e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// ── ANNOUNCEMENT PUBLIC (no auth) ──
+router.get('/announcement-public', async (req, res) => {
+    try {
+        const snap = await db.collection('settings').doc('announcement').get();
+        const ann  = snap.exists ? snap.data() : { title: '', text: '', active: false };
+        const { updatedAt, ...safe } = ann;
+        res.json({ status: true, announcement: safe });
+    } catch(e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// ── ANNOUNCEMENT (admin) ──
+router.get('/announcement', requireAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('settings').doc('announcement').get();
+        const ann  = snap.exists ? snap.data() : { title: '', text: '', active: false };
+        res.json({ status: true, announcement: ann });
+    } catch(e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+router.post('/announcement', requireAdmin, async (req, res) => {
+    try {
+        const { title, text, active } = req.body;
+        await db.collection('settings').doc('announcement').set({
+            title:     title  || '',
+            text:      text   || '',
+            active:    active === true || active === 'true',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        res.json({ status: true, message: 'Announcement updated' });
     } catch(e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
