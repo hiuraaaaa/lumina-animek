@@ -290,6 +290,53 @@
       </div>
     </div>
 
+    <!-- KIRIM NOTIFIKASI -->
+    <div class="admin-section">
+      <div class="admin-section-title">Kirim Notifikasi</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Target</label>
+          <select id="notif-target" onchange="toggleNotifUid()"
+            style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;appearance:none">
+            <option value="all">Semua User</option>
+            <option value="user">User Tertentu</option>
+          </select>
+        </div>
+        <div id="notif-uid-wrap" style="display:none;flex-direction:column;gap:4px">
+          <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">UID User</label>
+          <input type="text" id="notif-uid" placeholder="UID user target..."
+            style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%"
+            onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Judul</label>
+          <input type="text" id="notif-title" placeholder="Judul notifikasi..."
+            style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%"
+            onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Pesan</label>
+          <textarea id="notif-message" rows="2" placeholder="Isi pesan notifikasi..."
+            style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;resize:none"
+            onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Tipe</label>
+          <select id="notif-type"
+            style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;appearance:none">
+            <option value="info">Info</option>
+            <option value="success">Success</option>
+            <option value="warning">Warning</option>
+            <option value="anime">Anime Baru</option>
+          </select>
+        </div>
+        <button onclick="sendNotification()" id="btn-send-notif"
+          style="width:100%;padding:11px;background:var(--accent);color:white;border:none;font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.15s">
+          Kirim Notifikasi
+        </button>
+      </div>
+    </div>
+
     <!-- MANAJEMEN USER -->
     <div class="admin-section" style="padding-bottom:24px">
       <div class="admin-section-title" style="justify-content:space-between">
@@ -526,6 +573,45 @@
         else showToast('Gagal: ' + data.message);
       } catch(e) { showToast('Gagal: ' + e.message); }
       finally { btn.disabled = false; btn.textContent = 'Simpan'; }
+    }
+
+    // ── NOTIFICATIONS ──
+    function toggleNotifUid() {
+      const target = document.getElementById('notif-target').value;
+      const wrap   = document.getElementById('notif-uid-wrap');
+      wrap.style.display = target === 'user' ? 'flex' : 'none';
+    }
+
+    async function sendNotification() {
+      const target  = document.getElementById('notif-target').value;
+      const uid     = document.getElementById('notif-uid').value.trim();
+      const title   = document.getElementById('notif-title').value.trim();
+      const message = document.getElementById('notif-message').value.trim();
+      const type    = document.getElementById('notif-type').value;
+
+      if (!title)   return showToast('Judul wajib diisi');
+      if (!message) return showToast('Pesan wajib diisi');
+      if (target === 'user' && !uid) return showToast('UID user wajib diisi');
+
+      const btn = document.getElementById('btn-send-notif');
+      btn.disabled = true; btn.textContent = 'Mengirim...';
+
+      try {
+        const res = await fetch('/api/admin/notifications/send', {
+          method:  'POST',
+          headers: { 'x-user-email': currentAdminUser.email, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ target, uid: target === 'user' ? uid : undefined, title, message, type })
+        });
+        const data = await res.json();
+        if (data.status) {
+          showToast(data.message || 'Notif terkirim!');
+          document.getElementById('notif-title').value   = '';
+          document.getElementById('notif-message').value = '';
+        } else {
+          showToast('Gagal: ' + data.message);
+        }
+      } catch(e) { showToast('Gagal: ' + e.message); }
+      finally { btn.disabled = false; btn.textContent = 'Kirim Notifikasi'; }
     }
 
     async function doLogout() {
