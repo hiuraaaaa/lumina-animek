@@ -254,6 +254,42 @@
       </div>
     </div>
 
+    <!-- ANNOUNCEMENT -->
+    <div class="admin-section">
+      <div class="admin-section-title">Announcement</div>
+      <div style="background:var(--bg2);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px">
+        <!-- Toggle aktif/nonaktif -->
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--text)">Tampilkan Announcement</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Muncul di halaman beranda</div>
+          </div>
+          <div id="ann-toggle" onclick="toggleAnnouncement()" style="width:40px;height:22px;border-radius:11px;background:var(--bg4);position:relative;transition:background 0.2s;cursor:pointer;flex-shrink:0">
+            <div id="ann-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform 0.2s"></div>
+          </div>
+        </div>
+        <!-- Form -->
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Judul</label>
+            <input type="text" id="ann-title" placeholder="Judul announcement..."
+              style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;transition:border-color 0.15s"
+              onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Teks</label>
+            <textarea id="ann-text" rows="2" placeholder="Isi pesan announcement..."
+              style="background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;width:100%;resize:none;transition:border-color 0.15s"
+              onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+          <button onclick="saveAnnouncement()" id="btn-save-ann"
+            style="width:100%;padding:11px;background:var(--accent);color:white;border:none;font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;transition:all 0.15s">
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MANAJEMEN USER -->
     <div class="admin-section" style="padding-bottom:24px">
       <div class="admin-section-title" style="justify-content:space-between">
@@ -308,7 +344,7 @@
 
     // ── LOAD DASHBOARD ──
     async function loadDashboard() {
-      await Promise.all([loadStats(), loadUsers()]);
+      await Promise.all([loadStats(), loadUsers(), loadAnnouncement()]);
     }
 
     async function loadStats() {
@@ -444,6 +480,52 @@
         document.body.style.position = '';
         document.body.style.width    = '';
       }
+    }
+
+    // ── ANNOUNCEMENT ──
+    let _annActive = false;
+
+    async function loadAnnouncement() {
+      try {
+        const res  = await fetch('/api/admin/announcement', { headers: { 'x-user-email': currentAdminUser.email } });
+        const data = await res.json();
+        if (!data.status) return;
+        const ann = data.announcement;
+        _annActive = ann.active || false;
+        document.getElementById('ann-title').value = ann.title || '';
+        document.getElementById('ann-text').value  = ann.text  || '';
+        updateAnnToggle(_annActive);
+      } catch(e) {}
+    }
+
+    function updateAnnToggle(active) {
+      _annActive = active;
+      const toggle = document.getElementById('ann-toggle');
+      const knob   = document.getElementById('ann-knob');
+      toggle.style.background = active ? 'var(--accent)' : 'var(--bg4)';
+      knob.style.transform    = active ? 'translateX(18px)' : 'translateX(0)';
+    }
+
+    async function toggleAnnouncement() {
+      updateAnnToggle(!_annActive);
+    }
+
+    async function saveAnnouncement() {
+      const title  = document.getElementById('ann-title').value.trim();
+      const text   = document.getElementById('ann-text').value.trim();
+      const btn    = document.getElementById('btn-save-ann');
+      btn.disabled = true; btn.textContent = 'Menyimpan...';
+      try {
+        const res = await fetch('/api/admin/announcement', {
+          method:  'POST',
+          headers: { 'x-user-email': currentAdminUser.email, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ title, text, active: _annActive })
+        });
+        const data = await res.json();
+        if (data.status) showToast('Announcement disimpan!');
+        else showToast('Gagal: ' + data.message);
+      } catch(e) { showToast('Gagal: ' + e.message); }
+      finally { btn.disabled = false; btn.textContent = 'Simpan'; }
     }
 
     async function doLogout() {
