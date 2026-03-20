@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>LunarStream — Nonton Anime Sub Indo Gratis</title>
-  <!-- ── THEME INIT (no flicker) ── -->
 
   <!-- ── FAVICON ── -->
   <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
@@ -139,7 +138,7 @@
   </nav>
 
   <!-- ANNOUNCEMENT -->
-  <div class="announcement" id="announcement">
+  <div class="announcement" id="announcement" style="display:none">
     <div class="announcement-icon">
       <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -147,8 +146,8 @@
       </svg>
     </div>
     <div class="announcement-body">
-      <div class="announcement-title">LUNARSTREAM V1 RELEASE</div>
-      <div class="announcement-text">Temukan bug? Laporkan ke admin. Selamat menikmati!</div>
+      <div class="announcement-title" id="ann-title-display"></div>
+      <div class="announcement-text" id="ann-text-display"></div>
     </div>
     <button class="announcement-close" id="close-announce">×</button>
   </div>
@@ -309,4 +308,4 @@
     });
   </script>
 </body>
-</html>
+                  </html>
