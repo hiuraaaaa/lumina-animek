@@ -38,6 +38,7 @@ app.get('/watchlist',   (req, res) => res.sendFile(pub('watchlist.html')));
 app.get('/list',        (req, res) => res.sendFile(pub('list.html')));
 app.get('/contact',     (req, res) => res.sendFile(pub('contact.html')));
 app.get('/history',     (req, res) => res.sendFile(pub('history.html')));
+app.get('/notifications', (req, res) => res.sendFile(pub('notifications.html')));
 
 // ── ADMIN ──
 app.get('/admin',       (req, res) => res.sendFile(pub('admin.html')));
