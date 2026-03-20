@@ -116,4 +116,51 @@ router.post('/announcement', requireAdmin, async (req, res) => {
     } catch(e) { res.status(500).json({ status: false, message: e.message }); }
 });
 
+// ── NOTIFICATIONS ──
+// Kirim notif ke semua user atau user tertentu
+router.post('/notifications/send', requireAdmin, async (req, res) => {
+    try {
+        const { title, message, target, uid, type = 'info' } = req.body;
+        if (!title || !message) return res.status(400).json({ status: false, message: 'title dan message wajib diisi' });
+
+        const notif = {
+            title,
+            message,
+            type,   // info | warning | success | anime
+            read:   false,
+            sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        if (target === 'all') {
+            // Broadcast ke semua user
+            const snap  = await db.collection('users').get();
+            const batch = db.batch();
+            snap.docs.forEach(doc => {
+                const ref = db.collection('notifications').doc(doc.id).collection('items').doc();
+                batch.set(ref, notif);
+            });
+            await batch.commit();
+            res.json({ status: true, message: `Notif terkirim ke ${snap.docs.length} user` });
+        } else if (target === 'user' && uid) {
+            // Kirim ke user tertentu
+            await db.collection('notifications').doc(uid).collection('items').add(notif);
+            res.json({ status: true, message: 'Notif terkirim ke user' });
+        } else {
+            res.status(400).json({ status: false, message: 'target harus "all" atau "user" dengan uid' });
+        }
+    } catch(e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
+// List notif yang sudah dikirim (10 terakhir per user = skip, ambil dari broadcast log)
+router.get('/notifications/history', requireAdmin, async (req, res) => {
+    try {
+        const snap = await db.collection('notification_log')
+            .orderBy('sentAt', 'desc')
+            .limit(20)
+            .get();
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        res.json({ status: true, list });
+    } catch(e) { res.status(500).json({ status: false, message: e.message }); }
+});
+
 module.exports = router;
