@@ -156,15 +156,43 @@ function initSearch() {
 }
 
 // ── ANNOUNCEMENT ──
-function initAnnouncement() {
-    const btn = document.getElementById('close-announce');
-    const el  = document.getElementById('announcement');
-    if (btn && el) {
+async function initAnnouncement() {
+    const el    = document.getElementById('announcement');
+    const btn   = document.getElementById('close-announce');
+    const title = document.getElementById('ann-title-display');
+    const text  = document.getElementById('ann-text-display');
+    if (!el) return;
+
+    // Kalau sudah pernah ditutup di sesi ini, langsung hide
+    if (sessionStorage.getItem('announce_closed')) {
+        el.style.display = 'none';
+        return;
+    }
+
+    try {
+        const res  = await fetch('/api/admin/announcement-public');
+        const data = await res.json();
+
+        if (!data.status || !data.announcement?.active) {
+            el.style.display = 'none';
+            return;
+        }
+
+        const ann = data.announcement;
+        if (title) title.textContent = ann.title || '';
+        if (text)  text.textContent  = ann.text  || '';
+        el.style.display = 'flex';
+    } catch(e) {
+        // Kalau gagal fetch, hide saja
+        el.style.display = 'none';
+    }
+
+    // Close button
+    if (btn) {
         btn.addEventListener('click', () => {
             el.style.display = 'none';
             sessionStorage.setItem('announce_closed', '1');
         });
-        if (sessionStorage.getItem('announce_closed')) el.style.display = 'none';
     }
 }
 
